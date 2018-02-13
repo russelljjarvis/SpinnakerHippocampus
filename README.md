@@ -1,6 +1,22 @@
 # DataAnalysisComputationNeuroscience
 
-# Assignment 3 Data Analysis via Pandas
+Analysis and Visualization of spike time variance in a basic neuromorphic simulation of hippocampus cells.
+
+Introduction: As a contribution to my ongoing research objectives, I want to be able to create parts of an analysis and visualization pipeline that will allow me to difference model predictions (characterizing population wide, and individual neuron simulated spike times), with some experimentally derived observations of spike time variation and spike time synchrony in the rodent hippocampus.  This might sound difficult, however there are already many off the shelf algorithms for computing spike time variation and spike train synchrony:
+http://elephant.readthedocs.io/en/latest/reference/statistics.html
+https://github.com/mariomulansky/PySpike/tree/master/pyspike.git
+
+Much of this work may involve good visualize of multivariate spike train distance, and within neuron coefficient of variation of Inter Spike Intervals. I am also open to considering different and less elaborate spike time based statistics and visualizations that I can use to meaningfully compare simulated model predictions to experimental observations.
+
+For this project I have created a dedicated github repository: https://github.com/russelljjarvis/DanalysisCNeuro.git
+
+The idea is to run and record from neuronal network simulations run on a neuromorphic hardware substrate which I access via: 
+https://collab.humanbrainproject.eu/
+Note also, if you decided to join this group project and you were interested in the coding the model, I can provide instructions for requesting access, or I could run your code via my collaboration portal.
+
+The simulation mentioned herein is a reduced (reduced in degree of cell numbers and electro-dynamic properties) hippocampus neuronal network model that is currently in development, however preliminary outputs should be ready before the project work starts in earnest (next week).
+
+I have already talked to several people in class about collaborating in a final project, if you are one of these people please feel free to discuss either committing to this proposal, rejecting it and working with other people, or to suggesting changes and improvements.
 
 The goal is to test if connectivity information combined with simple cell dynamic models can set up a situation where a
 teaching relationship can be measured in the dynamic activity between grid (teacher) and place (student) populations.
