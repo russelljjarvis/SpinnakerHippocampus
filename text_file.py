@@ -1,0 +1,4 @@
+pickles/connections.p
+pickles/membrane_dynamics_balanced_file.p
+pickles/membrane_dynamics_file.p
+pickles/membrane_dynamics_hippocampome_file.p
