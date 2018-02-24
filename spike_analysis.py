@@ -3,7 +3,7 @@ import numpy as np
 from neuronunit.tests.dynamics import ISITest, LocalVariationTest
 import pyspike
 import matplotlib as mpl
-mpl.use('Agg')
+#mpl.use('Agg')
 
 import matplotlib.pyplot as plt
 
@@ -34,12 +34,12 @@ except:
 
 
 # first load the data, interval ending time = 4000, start=0 (default)
-spike_trains_txt = spk.load_spike_trains_from_txt("PySpike_testdata.txt", 4000)
+#spike_trains_txt = spk.load_spike_trains_from_txt("PySpike_testdata.txt", 4000)
 
 wrangled_trains = []
 for spiketrain in mdf1.spiketrains:
     y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
-    pspikes = pyspike.SpikeTrain(spiketrain,edges=(0,max(spiketrain)))
+    pspikes = pyspike.SpikeTrain(spiketrain,edges=(0,4000))
     wrangled_trains.append(pspikes)
     print(pspikes)
 
@@ -64,16 +64,17 @@ plt.imshow(isi_distance, interpolation='none')
 plt.title("ISI-distance")
 
 #plt.figure()
-spike_distance = spk.spike_distance_matrix(spike_trains, interval=(0, 1000))
+spike_distance = spk.spike_distance_matrix(spike_trains, interval=(0, 4000))
 plt.imshow(spike_distance, interpolation='none')
 plt.title("SPIKE-distance, T=0-1000")
+plt.show()
 
 #plt.figure()
-spike_sync = spk.spike_sync_matrix(spike_trains, interval=(2000, 4000))
+spike_sync = spk.spike_sync_matrix(spike_trains, interval=(0, 4000))
 plt.imshow(spike_sync, interpolation='none')
 plt.title("SPIKE-Sync, T=2000-4000")
-
-plt.savefig('the distances')
+plt.show()
+#plt.savefig('the distances')
 
 '''
 T_max = 0.01
