@@ -1,9 +1,10 @@
 FROM russelljarvis/neuronunit
 RUN echo "deb http://cran.rstudio.com/bin/linux/ubuntu xenial/" | sudo tee -a /etc/apt/sources.list
-RUN apt-get update
-RUN apt-get install r-base r-base-dev
 RUN gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9
 RUN gpg -a --export E084DAB9 | sudo apt-key add -
+RUN apt-get update
+RUN apt-get install r-base r-base-dev r-base-core
+RUN update && sudo apt-get upgrade
 
 USER jovyan
 RUN sudo /opt/conda/bin/pip install psutil
