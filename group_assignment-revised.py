@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use('Agg')
 import mpi4py
 
-threads  = 8
+threads  = sim.rank()
 rngseed  = 98765
 parallel_safe = True
 extra = {'threads' : threads}
@@ -35,6 +35,8 @@ from pyNN.utility import get_simulator, init_logging, normalized_filename
 import random
 import socket
 from neuronunit.optimization import get_neab
+import networkx as nx
+#os.system('pip install graph_tool')
 
 sim = pyNN.neuron
 
@@ -127,6 +129,12 @@ for i in IIlist:
         post_inh.append(i[1])
 assert len(pre_inh) == len(post_inh)
 
+
+#from graph_tool.all import motif_significance, load_graph_from_csv
+#bc = load_graph_from_csv('blogcatalog.edges', directed=False, csv_options={'quotechar': '"', 'delimiter': ' '})
+
+
+
 import pickle
 with open('connections.p','wb') as f:
    pickle.dump([post_inh,pre_inh,pre_exc,post_exc],f)
@@ -139,9 +147,21 @@ index_inh = [ i for i,d in enumerate(dfm) if '-' in d[0] ]
 #sns.pairplot(df, hue="species")
 from scipy.sparse import coo_matrix
 m = np.matrix(filtered[1:])
+
+bool_matrix = np.add(plot_excit,plot_inhib)
+with open('bool_matrix.p','wb') as f:
+   pickle.dump(bool_matrix,f)
+
 if not isinstance(m, coo_matrix):
     m = coo_matrix(m)
-'''
+
+
+G = nx.DiGraph(m)
+#https://git.skewed.de/count0/graph-tool/issues/366
+#m, z = motif_significance(G, k=4, n_shuffles=10)
+#small_world_grid = nx.navigable_small_world_graph(ml)#, p=1, q=1, r=2, dim=2, seed=None)
+#small_world_ring = nx.watts_strogatz_graph(ml)
+
 fig = matplotlib.pyplot.figure()
 ax = fig.add_subplot(111, axisbg='black')
 ax.plot(m.col, m.row, 's', color='white', ms=1)
@@ -156,7 +176,7 @@ ax.set_xticks([])
 ax.set_yticks([])
 #fig.savefig('blah.png')
 #ax.figure.show()
-'''
+
 # # A plot of the excitatory synapse connectivity matrix
 #
 #matplotlib.pyplot.imshow(plot_excit)
@@ -267,7 +287,7 @@ connections = {}
 connections['ext'] = sim.Projection(ext_stim, all_cells, ext_conn, ext_syn, receptor_type='excitatory')
 ##
 # Setup and run a simulation. Note there is no current injection into the neuron.
-# All cells in the network are in a quiescent state, so its not a surprise that there are no spikes
+# All cells in the network are in a quiescent state, so its not a surprise that xthere are no spikes
 ##
 
 neurons = all_cells
@@ -286,7 +306,7 @@ neurons.initialize(v=-65.0, u=-14.0)
 sim.run(6000.0)
 
 data = neurons.get_data().segments[0]
-with open('pickles/membrane_dynamics_hippocampome_file.p', 'wb') as f:
+with open('pickles/qi.p', 'wb') as f:
     pickle.dump(data,f)
 
 from pyNN.utility.plotting import Figure, Panel, comparison_plot, plot_spiketrains
