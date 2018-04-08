@@ -92,7 +92,7 @@ IElist = []
 
 for i,j in enumerate(filtered):
   for k,xaxis in enumerate(j):
-    if xaxis==1 or xaxis ==2:
+    if xaxis==1 or xaxis == 2:
       source = i
       target = k
       delay = delay_distr.next()
@@ -102,7 +102,7 @@ for i,j in enumerate(filtered):
       else:
           EElist.append((source,target,delay,weight))
 
-    if xaxis==-1 or xaxis ==-2:
+    if xaxis==-1 or xaxis == -2:
       source = i
       target = k
       delay = delay_distr.next()
@@ -113,9 +113,44 @@ for i,j in enumerate(filtered):
           IIlist.append((source,target,delay,weight))
 
 internal_conn_ee = sim.FromListConnector(EElist)
-internal_conn_ii = sim.FromListConnector(IIlist)
-internal_conn_ei = sim.FromListConnector(EIlist)
+ee = internal_conn_ee.conn_list
+ee_srcs = ee[:,0]
+ee_tgs = ee[:,1]
+
+#ee_srcs = set([ int(e[0]) for e in ee ])
+#ee_tgs = set([ int(e[1]) for e in ee ])
+
 internal_conn_ie = sim.FromListConnector(IElist)
+ie = internal_conn_ie.conn_list
+ie_srcs = set([ int(e[0]) for e in ie ])
+ie_tgs = set([ int(e[1]) for e in ie ])
+
+internal_conn_ei = sim.FromListConnector(EIlist)
+ei = internal_conn_ei.conn_list
+ei_srcs = set([ int(e[0]) for e in ei ])
+ei_tgs = set([ int(e[1]) for e in ei ])
+
+internal_conn_ii = sim.FromListConnector(IIlist)
+ii = internal_conn_ii.conn_list
+ii_srcs = set([ int(e[0]) for e in ii ])
+ii_tgs = set([ int(e[1]) for e in ii ])
+
+for e in internal_conn_ee.conn_list:
+    assert e[0] in ee_srcs
+    assert e[1] in ee_tgs
+
+for i in internal_conn_ii.conn_list:
+    assert i[0] in ii_srcs
+    assert i[1] in ii_tgs
+
+#import pdb; pdb.set_trace()
+#build up ii,ie,ee,and ei population
+#iss = [ i for i in internal_conn_ei.conn_list[:-1]]
+
+#internal_conn_ii = sim.FromListConnector(IIlist)
+#internal_conn_ei = sim.FromListConnector(EIlist)
+#internal_conn_ie = sim.FromListConnector(IElist)
+
 
 ml = len(filtered[1])+1
 pre_exc = []
@@ -130,8 +165,6 @@ delay_distr = RandomDistribution('normal', [45, 1e-1], rng=rng)
 
 plot_EE = np.zeros(shape=(ml,ml), dtype=bool)
 plot_II = np.zeros(shape=(ml,ml), dtype=bool)
-
-
 plot_EI = np.zeros(shape=(ml,ml), dtype=bool)
 plot_IE = np.zeros(shape=(ml,ml), dtype=bool)
 
@@ -178,12 +211,12 @@ assert num_inh > num_exc
 
 assert len(num_exc) < ml
 assert len(num_inh) < ml
-
+'''
 import pickle
 with open('connections.p','wb') as f:
    pickle.dump([post_inh,pre_inh,pre_exc,post_exc],f)
 
-
+'''
 # # Plot all the Projection pairs as a connection matrix (Excitatory and Inhibitory Connections)
 
 import pickle
@@ -215,9 +248,6 @@ in_hub = top_in[-1][1]
 out_degree = G.out_degree()
 top_out = sorted(([ (v,k) for k, v in out_degree.items() ]))
 out_hub = top_out[-1][1]
-
-
-
 mean_out = np.mean(list(out_degree.values()))
 mean_in = np.mean(list(in_degree.values()))
 
@@ -235,11 +265,11 @@ p = 0.25 # probability of instead wiring to a random long range destination.
 ni = len(plot_inhib)# size of small world network
 small_world_ring_inhib   = nx.watts_strogatz_graph(ni,mean_conns,0.25)
 
-first_set = set(pre_exc)
-second_set = set(post_exc)
+#first_set = set(pre_exc)
+#second_set = set(post_exc)
 
-assert len(set(pre_exc)) < len(pre_exc)
-print(len(set(pre_exc)),len(pre_exc))
+#assert len(set(pre_exc)) < len(pre_exc)
+#print(len(set(pre_exc)),len(pre_exc))
 
 nproc = sim.num_processes()
 nproc = 8
@@ -253,24 +283,18 @@ print("%s Initialising the simulator with %d thread(s)..." % (node_id, extra['th
 #assert len(num_inh) < ml
 pop_size = len(num_exc)+len(num_inh)
 
-pop_exc =  sim.Population(len(num_exc), sim.Izhikevich(a=0.02, b=0.2, c=-65, d=8, i_offset=0))
-pop_inh = sim.Population(len(num_inh), sim.Izhikevich(a=0.02, b=0.25, c=-65, d=2, i_offset=0))
-
 num_exc = [ i for i,e in enumerate(plot_excit) if sum(e) > 0 ]
 num_inh = [ y for y,i in enumerate(plot_inhib) if sum(i) > 0 ]
 
-#import pdb; pdb.set_trace()
+pop_exc =  sim.Population(len(num_exc), sim.Izhikevich(a=0.02, b=0.2, c=-65, d=8, i_offset=0))
+pop_inh = sim.Population(len(num_inh), sim.Izhikevich(a=0.02, b=0.25, c=-65, d=2, i_offset=0))
+
 all_cells = pop_exc + pop_inh
-#assert len(all_cells) == (len(pop_exc) + len(pop_inh))
 
-pop_pre_exc = all_cells[list(set(pre_exc))]
-pop_post_exc = all_cells[list(set(post_exc))]
-pop_pre_inh = all_cells[list(set(pre_inh))]
-pop_post_inh =  all_cells[list(set(post_inh))]
-print(pop_pre_exc)
-
-#assert len(pop_pre_exc) !=0
-#assert len(pop_pre_inh) !=0
+#pop_pre_exc = all_cells[list(set(pre_exc))]
+#pop_post_exc = all_cells[list(set(post_exc))]
+#pop_pre_inh = all_cells[list(set(pre_inh))]
+#pop_post_inh =  all_cells[list(set(post_inh))]
 
 
 
@@ -290,82 +314,34 @@ num_inh = [ y for y,i in enumerate(plot_inhib) if sum(i) > 0 ]
 NEXC = len(num_exc)
 NINH = len(num_inh)
 
-#What I need to do.
-# I need to create 4 new matrices.
-# one for ee,
-# one for ie,
-# one for ii,
-# one for ie
-ee = np.delete(plot_excit,num_inh,0)
-ee = np.delete(ee,num_inh,1)
-#import pdb.set_trace()
-#np.shape(ee)
-#ei = np.delete(plot_excit,num_exc,0)
-ei = np.delete(plot_excit,num_exc,1)
-assert ei.any() == True
-
-ii = np.delete(plot_inhib,num_exc,0)
-ii = np.delete(ii,num_exc,1)
-
-ie = np.delete(plot_inhib,num_inh,1)
-assert ie.any() == True
-
-#ie = np.delete(ie,num_inh,1)
-'''
-ie_sources = []
-ei_targets = []
-ei_sources = []
-ie_targets = []
-
-
-for i,j in enumerate(ei):
-    ei_sources.append(i)
-    for k in j:
-        print(j)
-        ei_targets.append(k)
-
-
-for i,j in enumerate(ie):
-    ie_sources.append(i)
-    print(j)
-    for k in j:
-        ie_targets.append(k)
-
-
-all_exc = all_cells[num_exc]
-all_inh = all_cells[num_inh]
-ie_sources = all_cells[ie_sources]
-print(ie_sources)
-ei_sources = all_cells[ei_sources]
-print(ei_sources)
-ie_targets = all_cells[ie_targets]
-print(ie_sources)
-ei_targets = all_cells[ei_targets]
-print(ei_sources)
-'''
-
-'''
-internal_conn_ee = sim.ArrayConnector(ee)
-internal_conn_ii = sim.ArrayConnector(ii)
-internal_conn_ie = sim.ArrayConnector(ie)
-internal_conn_ei = sim.ArrayConnector(ie)
-'''
-all_conns = plot_excit + plot_inhib
-
-all_exc = all_cells[num_exc]
-all_inh = all_cells[num_inh]
 
 print(len(all_cells))
 rng = NumpyRNG(seed=64754)
+ii_srcs = [int(i) for i in ii_srcs]
 
-print(EElist)
-ees = all_cells[[e[0] for e in EElist]]
-eet = all_cells[[e[1] for e in EElist]]
+def lintfix(lists):
+    lists = [ int(l) for l in lists ]
+    return lists
 
-exc_distr = RandomDistribution('normal', [4.125, 10e-1], rng=rng)
+ee_srcs = lintfix(ee_srcs)
+ee_tgs = lintfix(ee_tgs)
+
+ii_srcs = all_cells[ii_srcs]
+
+ii_tgs = all_cells[list(ii_tgs)]
+ee_srcs = all_cells[list(ee_srcs)]
+ee_tgs = all_cells[list(ee_tgs)]
+ei_srcs = all_cells[list(ei_srcs)]
+ei_tgs = all_cells[list(ei_tgs)]
+ie_srcs = all_cells[list(ie_srcs)]
+ie_tgs = all_cells[list(ie_tgs)]
+
+exc_distr = RandomDistribution('normal', [3.125, 10e-2], rng=rng)
 exc_syn = sim.StaticSynapse(weight=exc_distr, delay=delay_distr)
-prj_exc_exc = sim.Projection(ees, eet, internal_conn_ee, exc_syn, receptor_type='excitatory')
-#import pdb; pdb.set_trace()
+
+#if numpy.any(self.conn_list[:, 0] >= projection.pre.size):
+assert np.any(internal_conn_ee.conn_list[:,0]) < ee_srcs.size
+prj_exc_exc = sim.Projection(all_cells, all_cells, internal_conn_ee, exc_syn, receptor_type='excitatory')
 
 
 inh_distr = RandomDistribution('normal', [5, 2.1e-4], rng=rng)
@@ -376,15 +352,15 @@ iit = all_cells[[e[1] for e in IIlist]]
 
 rng = NumpyRNG(seed=64754)
 delay_distr = RandomDistribution('normal', [50, 100e-3], rng=rng)
-prj_inh_inh = sim.Projection(all_inh, all_inh, internal_conn_ii, inh_syn, receptor_type='inhibitory')
+prj_inh_inh = sim.Projection(all_cells, all_cells, internal_conn_ii, inh_syn, receptor_type='inhibitory')
 
-prj_inh_exc = sim.Projection(all_inh, all_exc, internal_conn_ie, exc_syn, receptor_type='excitatory')
+prj_inh_exc = sim.Projection(all_cells, all_cells, internal_conn_ie, exc_syn, receptor_type='excitatory')
 inh_distr = RandomDistribution('normal', [5, 2.1e-4], rng=rng)
 inh_syn = sim.StaticSynapse(weight=inh_distr, delay=delay_distr)
 
 rng = NumpyRNG(seed=64754)
 delay_distr = RandomDistribution('normal', [50, 100e-3], rng=rng)
-prj_exc_inh = sim.Projection(ei_sources, ei_targets, internal_conn_ei, inh_syn, receptor_type='inhibitory')
+prj_exc_inh = sim.Projection(all_cells, all_cells, internal_conn_ei, inh_syn, receptor_type='inhibitory')
 
 
 #import pdb; pdb.set_trace()
@@ -410,14 +386,14 @@ stdp = STDPMechanism(
           weight_dependence=AdditiveWeightDependence(w_min=0.01, w_max=10.0))
 
 
-
+'''
 exc_targets = all_cells[pre_exc]
 exc_srcs = all_cells[post_exc]
 inh_srcs = all_cells[pre_inh] # = []
 inh_targets = all_cells[post_inh] # = []
 exc_cells = all_cells[index_exc]
 inh_cells = all_cells[index_inh]
-
+'''
 top_3_hubs = all_cells[top_out[-3:][1]]
 
 ext_stim = sim.Population(len(all_cells), sim.SpikeSourcePoisson(rate=7.5, duration=6000.0), label="expoisson")
@@ -450,7 +426,7 @@ stimulus_inh = sim.Population(1, sim.SpikeSourceArray, {
 
 
 connector = sim.OneToOneConnector()
-ext_syn = sim.StaticSynapse(weight=5.925)
+ext_syn = sim.StaticSynapse(weight=2.925)
 
 projections = [
     sim.Projection(stimulus_exc, top_3_hubs, connector, ext_syn, receptor_type='excitatory'),
@@ -474,7 +450,7 @@ neurons.initialize(v=-65.0, u=-14.0)
 
 # === Run the simulation =====================================================
 
-sim.run(20000.0)
+sim.run(15509.0)
 
 data = neurons.get_data().segments[0]
 with open('pickles/qi.p', 'wb') as f:
