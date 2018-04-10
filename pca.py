@@ -30,7 +30,7 @@ the_last_trace = mdf1.analogsignals[0].as_array()[:,121]
 
 
 
-print(data_rotated,'data')
+print(data_projected,'data')
 print(pca.components_,'component direction vectors')
 def report_mean_var(data):
     for i in range(data.shape[1]):
