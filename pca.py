@@ -14,21 +14,19 @@ from mpl_toolkits.mplot3d import Axes3D
 import pickle
 with open('pickles/qi3.p', 'rb') as f:
   mdf1 = pickle.load(f)
-print(mdf1)
-#
+#print(mdf1)
 ass = mdf1.analogsignals[0]
-lens = np.shape(ass.as_array())[1]
-#import pdb; pdb.set_trace()
-
+lens = np.shape(ass.as_array()[:,1])[0]
 pca = PCA()
-data = features = ass.as_array()
-print(np.shape(features))
+data = np.array(mdf1.analogsignals[0].as_array().T)
 pca = PCA(n_components=lens).fit(data)
-data_rotated = np.dot(pca.components_,data.T).T
+data_projected = np.dot(pca.components_,data.T).T
+
+
 end_floor = np.floor(float(mdf1.t_stop))
 dt = float(mdf1.t_stop) % end_floor
 t_axis = np.arange(float(mdf1.t_start), float(mdf1.t_stop), dt)
-
+the_last_trace = mdf1.analogsignals[0].as_array()[:,121]
 
 
 
@@ -51,14 +49,13 @@ def variance_explained(df,pca):
     for i in range(n_components):
         print("PC %d explains %.3g%% of the variance" % (i+1,100*pca.explained_variance_ratio_[i]))
 
-variance_explained(pd.DataFrame(data_rotated),pca)
-import pdb
-pdb.set_trace()
+variance_explained(pd.DataFrame(data_projected),pca)
 
 plt.figure()
 plt.clf()
-for s in data_rotated:
-    plt.plot([i for i in s],s)
+for i,s in enumerate(data_projected):
+    vm = s.as_array()[:,i]
+    plt.plot([i for i in range(0,vm)],vm)
 plt.savefig(str('rotated_')+'analogsignals'+'.png');
 plt.close()
 
