@@ -17,16 +17,35 @@ with open('pickles/qi3.p', 'rb') as f:
 #print(mdf1)
 ass = mdf1.analogsignals[0]
 lens = np.shape(ass.as_array()[:,1])[0]
-pca = PCA()
-data = np.array(mdf1.analogsignals[0].as_array().T)
-pca = PCA(n_components=lens).fit(data)
-data_projected = np.dot(pca.components_,data.T).T
 
 
 end_floor = np.floor(float(mdf1.t_stop))
 dt = float(mdf1.t_stop) % end_floor
 t_axis = np.arange(float(mdf1.t_start), float(mdf1.t_stop), dt)
 the_last_trace = mdf1.analogsignals[0].as_array()[:,121]
+
+
+plt.figure()
+plt.clf()
+cleaned = []
+data = np.array(mdf1.analogsignals[0].as_array().T)
+print(data)
+for i,vm in enumerate(data):
+    if np.max(vm) > 1000.0 or np.min(vm) < -1000.0:
+        pass
+    else:
+        plt.plot(ass.times,vm)
+        cleaned.append(vm)
+        #vm = s#.as_array()[:,i]
+print(len(cleaned))        
+plt.savefig(str('un_rotated_')+'analogsignals'+'.png');
+plt.close()
+
+lens = len(cleaned)
+pca = PCA()
+data = np.array(cleaned).T #np.array(mdf1.analogsignals[0].as_array().T)
+pca = PCA(n_components=lens).fit(data)
+data_projected = np.dot(pca.components_,data.T).T
 
 
 
@@ -51,10 +70,10 @@ def variance_explained(df,pca):
 
 variance_explained(pd.DataFrame(data_projected),pca)
 
+
+signals = np.dot(data_projected,data)
 plt.figure()
 plt.clf()
-signals = np.dot(data_projected,data)
-
 for i,s in enumerate(signals):
     vm = s#.as_array()[:,i]
     plt.plot(t_axis,vm)
