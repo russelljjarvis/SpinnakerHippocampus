@@ -4,7 +4,7 @@ mpl.use('Agg')
 # coding: utf-8
 import os
 import matplotlib.pyplot as plt
-mpl.use('Agg')
+#mpl.use('Agg')
 
 #plt.use('Agg')
 import seaborn as sns
@@ -29,10 +29,7 @@ import elephant
 import elephant.conversion as conv
 import neo as n
 import quantities as pq
-
-import quantities as pq
-import quantities as pq
-
+from neo.core import analogsignal
 from elephant.statistics import cv
 import matplotlib.pyplot as plt
 import elephant
@@ -46,13 +43,25 @@ with open('pickles/qi.p', 'rb') as f:
 print(mdf1)
 '''
 
-def iter_plot(md):
+def iter_plot0(md):
+    import seaborn as sns
 
-    k, mdf1 = md
+    index, mdf1 = md
+    weight_gain_factors = {0:1,1:3,2:9,3:15,4:20}
+    k = weight_gain_factors[index]
+    #print(len(mdf1.segments),'length of block')
+
     ass = mdf1.analogsignals[0]
+
+    time_points = ass.times
+    avg = np.mean(ass, axis=0)  # Average over signals of Segment
+
+    plt.figure()
+    plt.plot([i for i in range(0,len(avg))], avg)
+    plt.title("Peak response in segment {0}".format(avg.max()))
+    plt.savefig('prs.png')
     vm_spiking = []
     vm_not_spiking = []
-
     spike_trains = []
     binary_trains = []
     max_spikes = 0
@@ -79,35 +88,55 @@ def iter_plot(md):
     end_floor = np.floor(float(mdf1.t_stop))
     dt = float(mdf1.t_stop) % end_floor
     mdf1.t_start
-    v = mdf1.take_slice_of_analogsignalarray_by_unit()
+    #v = mdf1.take_slice_of_analogsignalarray_by_unit()
     t_axis = np.arange(float(mdf1.t_start), float(mdf1.t_stop), dt)
-    mdf1.events
-    smaller_list = []
-    for a in ass:
-        #for i in ass:
-        if np.min(a) <-100.0 or np.max(a) > 100.0:
-            break
-        else:
-            smaller_list.append(a)
-    assert len(smaller_list) < len(ass)
     plt.figure()
     plt.clf()
-    for s in smaller_list:
-        plt.plot([i for i in range(0,len(s))],s)
-    plt.savefig(str('weight_')+str(k)+'analogsignals'+'.png');plt.close()
+
+    plt.figure()
+    plt.clf()
+    cleaned = []
+    data = np.array(mdf1.analogsignals[0].as_array().T)
+    print(data)
+    for i,vm in enumerate(data):
+        if np.max(vm) > 900.0 or np.min(vm) < - 900.0:
+            pass
+        else:
+            plt.plot(ass.times,vm)#,label='neuron identifier '+str(i)))
+            cleaned.append(vm)
+            #vm = s#.as_array()[:,i]
+
+    assert len(cleaned) < len(ass)
+
+    print(len(cleaned))
+    plt.title('neuron $V_{m}$')
+    #plt.legend(loc="upper left")
+    plt.savefig(str('weight_')+str(k)+'analogsignals'+'.png');
+    plt.xlabel('$ms$')
+    plt.ylabel('$mV$')
+
+    plt.close()
+
+
+        #pass
 
     plt.figure()
     plt.clf()
     plt.plot([i for i in range(0,len(vm_not_spiking[110]))],vm_not_spiking[110])
-    plt.savefig(str('weight_')+str(k)+'eespecific_analogsignals'+'.png');plt.close()
+    plt.xlabel('$ms$')
+    plt.ylabel('$mV$')
+    plt.savefig(str('weight_')+str(k)+'eespecific_analogsignals'+'.png');
+    plt.close()
 
 
     plt.figure()
     plt.clf()
-    plt.plot([i for i in range(0,len(vm_not_spiking[8]))],vm_not_spiking[55])
-    plt.savefig(str('weight_')+str(k)+'iispecific_analogsignals'+'.png');plt.close()
+    plt.plot([i for i in range(0,len(vm_not_spiking[110]))],vm_not_spiking[55])
+    plt.xlabel('$ms$')
+    plt.ylabel('$mV$')
 
-
+    plt.savefig(str('weight_')+str(k)+'iispecific_analogsignals'+'.png');
+    plt.close()
 
     cvs = [0 for i in range(0,len(spike_trains))]
     cvsd = {}
@@ -126,56 +155,35 @@ def iter_plot(md):
 
 
     cvs = [i for i in cvs if i!=0 ]
-    x_axis = [i for i in range(0,len(cvs))]
+    cells = [i for i in range(0,len(cvs))]
 
     plt.clf()
     fig, axes = plt.subplots()
-    axes.set_title('Coefficient of Variation Versus Neuron {}'.format(i))
-    axes.set_xlabel('Neuron number axis')
-    axes.set_ylabel('CV estimate axis')
-    plt.scatter(x_axis,cvs)
+    axes.set_title('Coefficient of Variation Versus Neuron')
+    axes.set_xlabel('Neuron number')
+    axes.set_ylabel('CV estimate')
+    mcv = np.mean(cvs)
+    plt.scatter(cells,cvs)
     fig.tight_layout()
-    plt.savefig(str('weight_')+str(k)+'cvs'+'.png');plt.close()
-
-    '''
-    plt.clf()
-    fig, axes = plt.subplots()
-    axes.set_title('ISI histogram over all neuronal outputs {}'.format(i))
-    axes.set_xlabel('Spike interinterval ranges')
-    axes.set_ylabel('Power in Inteval range')
-    unested_sp = []
-    for s in spike_trains:
-        unested_sp.extend(s)
-    import elephant
-    isi_hist = elephant.statistics.isi(sorted(unested_sp))
-    isi_hist = [i for i in isi_hist if i!=0 ]
-    plt.scatter([i for i in range(0,len(isi_hist))],isi_hist)
-    plt.savefig(str('weight_')+str(k)+'ISI_hist'+'.png');plt.close()
-
-    plt.clf()
-    fig, axes = plt.subplots()
-    axes.set_title('ISI histogram over all neuronal outputs {}'.format(i))
-    axes.set_xlabel('Spike interinterval ranges')
-    axes.set_ylabel('Power in Inteval range')
-    unested_sp = []
-    max_spikes = 0
-    for s in spike_trains:
-        unested_sp.extend(s)
-        if len(s) > max_spikes:
-            max_spikes = len(s)
-
-    plt.clf()
-
-    isi_hist = elephant.statistics.isi(sorted(unested_sp))
-    isi_hist = [i for i in isi_hist if i<=10 and i>0.15 ]
-    plt.hist(isi_hist,bins=10)
-    plt.savefig(str('weight_')+str(k)+'ISI_hist_bin_10'+'.png');plt.close()
+    plt.savefig(str('weight_')+str(k)+'cvs_mean_'+str(mcv)+'.png');
     plt.close()
     '''
+    import pandas as pd
+    d = {'coefficent_of_variation': cvs, 'cells': cells}
+    df = pd.DataFrame(data=d)
+
+    ax = sns.regplot(x='cells', y='coefficent_of_variation', data=df)#, fit_reg=False)
+    plt.savefig(str('weight_')+str(k)+'cvs_regexp_'+str(mcv)+'.png');
+    plt.close()
+    '''
+
     spike_trains = []
     ass = mdf1.analogsignals[0]
     tstop = mdf1.t_stop
+    #assert tstop == 2000
+    tstop = 2000
     vm_spiking = []
+
     for spiketrain in mdf1.spiketrains:
         vm_spiking.append(mdf1.analogsignals[0][spiketrain.annotations['source_id']])
         y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
@@ -186,16 +194,20 @@ def iter_plot(md):
 
     # plot the spike times
 
+    #for (i, spike_train) in enumerate(spike_trains):
+    #plt.scatter(spike_train, i*np.ones_like(spike_train), marker='|')
+
     plt.clf()
     for (i, spike_train) in enumerate(spike_trains):
-        plt.scatter(spike_train, i*np.ones_like(spike_train), marker='|')
-    plt.axis('tight')
-    plt.savefig(str('weight_')+str(k)+'raster_plot'+'.png');plt.close()
+        plt.scatter(spike_train, i*np.ones_like(spike_train), marker='.')
+    #plt.axis('tight')
+    plt.savefig(str('weight_')+str(k)+'raster_plot'+'.png');
+    plt.close()
 
-    plt.clf()
+    #plt.clf()
 
     #for (i, spike_train) in enumerate(spike_trains):
-    #    plt.plot(t, i * np.ones_like(tspike_train, 'k.', markersize=2)
+    #    plt.plot(spike_train, i * np.ones_like(tspike_train, 'k.', markersize=2))
     #plt.axis('tight')
     #plt.savefig(str('weight_')+str(k)+'colourful_raster_plot'+'.png');plt.close()
 
@@ -293,7 +305,7 @@ def iter_plot(md):
        pickle.dump(spike_distance,f)
 
     plt.imshow(spike_distance, interpolation='none')
-    plt.title("SPIKE-distance, T=0-1000")
+    plt.title("SPIKE-distance, T=0-2000")
 
 
     plt.savefig(str('weight_')+str(k)+'spike_distance_matrix'+'.png');plt.close()
@@ -320,17 +332,50 @@ def iter_plot(md):
 
     plt.savefig(str('weight_')+str(k)+'cluster_spike_sync_distance'+'.png');plt.close()
 
+def iter_plot1(md):
+    index, mdf1 = md
+    weight_gain_factors = {0:1,1:3,2:9,3:15,4:20}
+    k = weight_gain_factors[index]
+    ass = mdf1.analogsignals[0]
+    vm_spiking = []
+    vm_not_spiking = []
+
+    spike_trains = []
+    binary_trains = []
+    max_spikes = 0
+
+    cnt = 0
+    for spiketrain in mdf1.spiketrains:
+        #spiketrain = mdf1.spiketrains[index]
+        y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
+        # argument edges is the time interval you want to be considered.
+        pspikes = pyspike.SpikeTrain(spiketrain,edges=(0,len(ass)))
+        spike_trains.append(pspikes)
+        if len(spiketrain) > max_spikes:
+            max_spikes = len(spiketrain)
+
+        if np.max(ass[spiketrain.annotations['source_id']]) > 0.0:
+            vm_spiking.append(ass[spiketrain.annotations['source_id']])
+        else:
+            vm_not_spiking.append(ass[spiketrain.annotations['source_id']])
+        cnt+= 1
+
     import elephant
     from scipy.signal import periodogram
     #dt = 0.0025
     #frequencies, power = periodogram(ass,fs=1/dt)
     frequencies, power = elephant.spectral.welch_psd(ass)
-    mfreq = np.mean(frequencies)
-    print(frequencies)
+    #mfreq = np.mean(frequencies)
+    #import pdb; pdb.set_trace()
+    #print(frequencies)
+    mfreq = frequencies[np.where(power==np.max(power))[0][0]]
     import pickle
-    with open(str(k)+'mfreq.p','rb') as f:
-       pickle.dump(f,mfreq)
+    with open(str(k)+'_'+str(mfreq)+'_'+'mfreq.p','wb') as f:
+       pickle.dump(mfreq,f)
 
+    import pickle
+    f = open('9_25000.0 Hz_mfreq.p','rb')
+    blah = pickle.load(f)
     def plot_periodogram(frequencies,power):
         plt.figure(figsize=(10,4))
         plt.plot(frequencies,power)
@@ -352,23 +397,31 @@ def iter_plot(md):
     plt.figure()
     plt.clf()
     from matplotlib.colors import LogNorm
-    plt.imshow(coherance_matrix, interpolation='none',norm=LogNorm())
-    plt.title("Coherance matrix")
-    plt.savefig(str('weight_')+str(k)+str(mfreq)+'.png');plt.close()
+    #plt.imshow(coherance_matrix, interpolation='none',norm=cbar_kws)
+    sns.heatmap(coherance_matrix)#,cbar_kws=cbar_kws)
+    plt.title("Coherance Matrix")
+    plt.savefig(str('Coherance_matrix_weight_')+str(k)+str('freq_')+str(mfreq)+'.png');
+    plt.close()
+
+    import numpy
+    a = numpy.asarray(coherance_matrix)
+    numpy.savetxt("coherance_matrix.csv", a, delimiter=",")
     mdf1 = None
     coh = None
+
+
 iter_distances = natsorted(glob.glob('pickles/qi*.p'))
 mdfloop = {}
-weight_gain_factors = {1:None,3:None,9:None,15:None,20:None}
 
 for k,i in enumerate(iter_distances):
     with open(i, 'rb') as f:
-      mdfloop[k] = pickle.load(f)
+        from neo.core import analogsignal
+        mdfloop[k] = pickle.load(f)
 
 for k,mdf1 in mdfloop.items():
     print(mdf1,k)
 
-  
+
 titems = [ (k,mdf1) for k,mdf1 in mdfloop.items() ]
 print(titems)
 print(iter_distances)
@@ -382,10 +435,22 @@ print(titems,'titems')
 
 #pdb.set_trace()
 #    k, mdf1 = md
-grid = db.from_sequence(titems,npartitions = 4)
-_ = list(db.map(iter_plot,grid).compute());
 
+#for t in titems:
+#    iter_plot1(t)
 
+grid = db.from_sequence(titems,npartitions = 3)
+_ = list(db.map(iter_plot0,grid).compute());
+
+grid = db.from_sequence(titems,npartitions = 3)
+_ = list(db.map(iter_plot1,grid).compute());
+
+#_ = List(iter_plot0,titems))
+
+import pca
+
+from sciunit.utils import NotebookTools
+NotebookTools.do_notebook('Distribution')
 
 import pickle
 with open('bool_matrix.p','rb') as f:

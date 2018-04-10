@@ -6,13 +6,13 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 import matplotlib.pyplot as plt
-#import seaborn as sns
-#sns.set(color_codes=True)
+import seaborn as sns
+sns.set(color_codes=True)
 #!pip install ipyvolume
 from mpl_toolkits.mplot3d import Axes3D
 #import ipyvolume.pylab as p3
 import pickle
-with open('pickles/qi1.p', 'rb') as f:
+with open('pickles/qi3.p', 'rb') as f:
   mdf1 = pickle.load(f)
 #print(mdf1)
 ass = mdf1.analogsignals[0]
@@ -34,12 +34,21 @@ for i,vm in enumerate(data):
     if np.max(vm) > 900.0 or np.min(vm) < - 900.0:
         pass
     else:
-        plt.plot(ass.times,vm)
+        plt.plot(ass.times,vm)#,label='neuron identifier '+str(i)))
         cleaned.append(vm)
         #vm = s#.as_array()[:,i]
 print(len(cleaned))
+plt.title('neuron $V_{m}$')
+plt.xlabel('$ms$')
+plt.ylabel('$mV$')
+#plt.legend(loc="upper left")
 plt.savefig(str('un_rotated_')+'analogsignals'+'.png');
 plt.close()
+
+#    plt.plot(t_axis,vm,label='neuron identifier '+str(i))
+#plt.savefig(str('rotated_')+'analogsignals'+'.png');
+#plt.close()
+
 
 lens = len(cleaned)
 pca = PCA()
@@ -68,7 +77,7 @@ def variance_explained(df,pca):
     for i in range(n_components):
         print("PC %d explains %.3g%% of the variance" % (i+1,100*pca.explained_variance_ratio_[i]))
 
-variance_explained(pd.DataFrame(data_projected),pca)
+#variance_explained(pd.DataFrame(data_projected),pca)
 
 
 #signals = np.dot(data_projected,data)
@@ -79,7 +88,16 @@ plt.figure()
 plt.clf()
 for i,s in enumerate(signals):
     vm = s#.as_array()[:,i]
-    plt.plot(t_axis,vm,label='neuron identifier '+str(i))
+    if i < 4:
+        plt.plot(t_axis,vm,label='neuron identifier '+str(i))
+    else:
+        pass
+        #plt.plot(t_axis,vm)
+
+plt.title('Neurons $mV$ that explain the most variance')
+plt.xlabel('$ms$')
+plt.ylabel('$mV$')
+plt.legend(loc="upper left")
 plt.savefig(str('rotated_')+'analogsignals'+'.png');
 plt.close()
 

@@ -299,8 +299,8 @@ for pe in pop_inh:
     pe.set_parameters(a=0.02+0.08*r, b=0.2-0.05*r, c=-65, d= 2, i_offset=0)
     print(pe.get_parameters())
 
-print(len(pop_exc),'indexs of excitatory neurons')
-print(len(pop_inh),'indexs of inhibitory neurons')
+print('0:',len(pop_exc),'indexs of excitatory neurons')
+print(len(pop_exc),':',len(pop_inh),'indexs of inhibitory neurons')
 #with open('pickles/cells.p', 'wb') as f:
 #    pickle.dump([all_cells,pop_exc,pop_inh],f)
 
@@ -322,7 +322,7 @@ for i,wg in enumerate(weight_gain_factors.keys()):
     #i,wg = xargs
 
     #exc_distr = RandomDistribution('normal', [3.125, 10e-2], rng=rng)
-    exc_syn = sim.StaticSynapse(weight = wg/100, delay=delay_distr)
+    exc_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
 
     #exc_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
 
@@ -332,7 +332,7 @@ for i,wg in enumerate(weight_gain_factors.keys()):
 
     #inh_distr = RandomDistribution('normal', [5, 2.1e-4], rng=rng)
     #inh_syn = sim.StaticSynapse(weight=15, delay=delay_distr)
-    inh_syn = sim.StaticSynapse(weight = wg/100, delay=delay_distr)
+    inh_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
 
 
     #iis = all_cells[[e[0] for e in IIlist]]
@@ -349,8 +349,9 @@ for i,wg in enumerate(weight_gain_factors.keys()):
     #delay_distr = RandomDistribution('normal', [50, 100e-3], rng=rng)
     # Variation in propogation delays are very important for self sustaininig network activity.
     # more so in point neurons which don't have internal propogation times.
-
-    noise = sim.NoisyCurrentSource(mean=1.5, stdev=1.0, start=0.0*qt.ms, stop=2000.0*qt.ms, dt=1.0)
+    #import quantities as qt
+    noise = sim.NoisyCurrentSource(mean=2.25/1000.0, stdev=3.00/500.0, start=0.0, stop=2000.0, dt=1.0)
+    print(noise)
     all_cells.inject(noise)
 
     #ext_stim = sim.Population(len(all_cells), sim.SpikeSourcePoisson(rate=7.5, duration=6000.0), label="expoisson")
@@ -372,13 +373,24 @@ for i,wg in enumerate(weight_gain_factors.keys()):
     neurons.initialize(v=-65.0, u=-14.0)
     # === Run the simulation =====================================================
     #sim.run(11704.0)
-    tstop = 2000.0*qt.ms
+    tstop = 2000.0#*qt.ms
     sim.run(tstop)
     data = neurons.get_data().segments[0]
     print(len(data.analogsignals[0].times))
     with open('pickles/qi'+str(wg)+'.p', 'wb') as f:
         pickle.dump(data,f)
+    # make data none or else it will grow in a loop
+    data = None
+    noise = None
+    prj_inh_exc = None
+    prj_inh_inh = None
+    prj_exc_exc = None
+    prj_exc_inh = None
+
+
 import pca
+import sa
+#import sa
 
 #iter_sim = [ (i,wg) for i,wg in enumerate(weight_gain_factors.keys()) ]
 #import dask.bag as db
