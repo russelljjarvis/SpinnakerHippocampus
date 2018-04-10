@@ -53,9 +53,11 @@ variance_explained(pd.DataFrame(data_projected),pca)
 
 plt.figure()
 plt.clf()
-for i,s in enumerate(data_projected):
-    vm = s.as_array()[:,i]
-    plt.plot([i for i in range(0,vm)],vm)
+signals = np.dot(data_projected,data)
+
+for i,s in enumerate(signals):
+    vm = s#.as_array()[:,i]
+    plt.plot(t_axis,vm)
 plt.savefig(str('rotated_')+'analogsignals'+'.png');
 plt.close()
 
