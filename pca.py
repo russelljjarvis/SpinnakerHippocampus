@@ -6,13 +6,13 @@ import pandas as pd
 from sklearn.decomposition import PCA
 
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(color_codes=True)
+#import seaborn as sns
+#sns.set(color_codes=True)
 #!pip install ipyvolume
 from mpl_toolkits.mplot3d import Axes3D
 #import ipyvolume.pylab as p3
 import pickle
-with open('pickles/qi3.p', 'rb') as f:
+with open('pickles/qi1.p', 'rb') as f:
   mdf1 = pickle.load(f)
 #print(mdf1)
 ass = mdf1.analogsignals[0]
@@ -31,19 +31,19 @@ cleaned = []
 data = np.array(mdf1.analogsignals[0].as_array().T)
 print(data)
 for i,vm in enumerate(data):
-    if np.max(vm) > 1000.0 or np.min(vm) < -1000.0:
+    if np.max(vm) > 900.0 or np.min(vm) < - 900.0:
         pass
     else:
         plt.plot(ass.times,vm)
         cleaned.append(vm)
         #vm = s#.as_array()[:,i]
-print(len(cleaned))        
+print(len(cleaned))
 plt.savefig(str('un_rotated_')+'analogsignals'+'.png');
 plt.close()
 
 lens = len(cleaned)
 pca = PCA()
-data = np.array(cleaned).T #np.array(mdf1.analogsignals[0].as_array().T)
+data = np.array(cleaned)#np.array(mdf1.analogsignals[0].as_array().T)
 pca = PCA(n_components=lens).fit(data)
 data_projected = np.dot(pca.components_,data.T).T
 
@@ -71,12 +71,15 @@ def variance_explained(df,pca):
 variance_explained(pd.DataFrame(data_projected),pca)
 
 
-signals = np.dot(data_projected,data)
+#signals = np.dot(data_projected,data)
+signals = np.dot(data.T,data_projected)
+signals = signals.T
+
 plt.figure()
 plt.clf()
 for i,s in enumerate(signals):
     vm = s#.as_array()[:,i]
-    plt.plot(t_axis,vm)
+    plt.plot(t_axis,vm,label='neuron identifier '+str(i))
 plt.savefig(str('rotated_')+'analogsignals'+'.png');
 plt.close()
 

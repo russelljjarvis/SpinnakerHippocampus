@@ -1,11 +1,31 @@
+#installs = #['bbp_client',
+installs = ['neuron','mpi4py','xlrd','pyNN','seaborn','lazyarray','neo','neuron']
+def install_deps(i):
+  '''
+  Hack in dependencies into to sys.path
+  '''
+  import os, sys
+  if i not in sys.path:
+    os.system('pip install '+str(i))
+
+#FSystem admin:
+_ = list(map(install_deps,installs))
+import os
+#Compile NEUORN mod files.
+temp = os.getcwd()
+os.chdir('/opt/conda/lib/python3.5/site-packages/pyNN/neuron/nmodl')
+get_ipython().system('nrnivmodl')
+os.chdir(temp)
+
 import pyNN.neuron as sim
 nproc = sim.num_processes()
 node = sim.rank()
 print(nproc)
 import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-#matplotlib.use('Agg')
 mpl.rcParams.update({'font.size':16})
 
 #import mpi4py
@@ -13,7 +33,7 @@ mpl.rcParams.update({'font.size':16})
 threads = 1
 rngseed  = 98765
 parallel_safe = False
-extra = {'threads' : threads}
+#extra = {'threads' : threads}
 import os
 import pandas as pd
 import sys
@@ -36,29 +56,13 @@ import socket
 import networkx as nx
 sim = pyNN.neuron
 
-installs = ['bbp_client','neuron','mpi4py','xlrd','pyNN','seaborn','lazyarray','neo','neuron','brian2']
-def install_deps(i):
-  '''
-  Hack in dependencies into to sys.path
-  '''
-  import os
-  if i not in sys.path:
-    os.system('pip install '+str(i))
-'''
-System admin:
-_ = list(map(install_deps,installs))
-import os
-#Compile NEUORN mod files.
-temp = os.getcwd()
-os.chdir('/opt/conda/lib/python3.5/site-packages/pyNN/neuron/nmodl')
-get_ipython().system('nrnivmodl')
-os.chdir(temp)
+
 # Get some hippocampus connectivity data, based on a conversation with
 # academic researchers on GH:
 # https://github.com/Hippocampome-Org/GraphTheory/issues?q=is%3Aissue+is%3Aclosed
 # scrape hippocamome connectivity data, that I intend to use to program neuromorphic hardware.
 # conditionally get files if they don't exist.
-'''
+
 
 path_xl = '_hybrid_connectivity_matrix_20171103_092033.xlsx'
 if not os.path.exists(path_xl):
@@ -81,7 +85,7 @@ pd.DataFrame(rcls).to_csv('cell_names.csv', index=False)
 filtered = dfm[:,3:]
 filtered = filtered[1:]
 rng = NumpyRNG(seed=64754)
-delay_distr = RandomDistribution('normal', [45, 1e-1], rng=rng)
+delay_distr = RandomDistribution('normal', [2, 1e-1], rng=rng)
 weight_distr = RandomDistribution('normal', [45, 1e-1], rng=rng)
 
 index_exc = [ i for i,d in enumerate(dfm) if '+' in d[0] ]
@@ -116,6 +120,7 @@ for i,j in enumerate(filtered):
 
 internal_conn_ee = sim.FromListConnector(EElist)
 ee = internal_conn_ee.conn_list
+
 ee_srcs = ee[:,0]
 ee_tgs = ee[:,1]
 
@@ -151,7 +156,7 @@ post_inh = []
 
 
 rng = NumpyRNG(seed=64754)
-delay_distr = RandomDistribution('normal', [45, 1e-1], rng=rng)
+delay_distr = RandomDistribution('normal', [2, 1e-1], rng=rng)
 
 
 plot_EE = np.zeros(shape=(ml,ml), dtype=bool)
@@ -198,7 +203,7 @@ num_inh = [ y for y,i in enumerate(plot_inhib) if sum(i) > 0 ]
 
 # the network is dominated by inhibitory neurons, which is unusual for modellers.
 assert num_inh > num_exc
-
+assert np.sum(plot_inhib) > np.sum(plot_excit)
 assert len(num_exc) < ml
 assert len(num_inh) < ml
 # # Plot all the Projection pairs as a connection matrix (Excitatory and Inhibitory Connections)
@@ -211,6 +216,22 @@ with open('graph_inhib.p','wb') as f:
 import pickle
 with open('graph_excit.p','wb') as f:
    pickle.dump(plot_excit,f)
+
+
+#with open('cell_names.p','wb') as f:
+#    pickle.dump(rcls,f)
+import pandas as pd
+pd.DataFrame(plot_EE).to_csv('ee.csv', index=False)
+
+import pandas as pd
+pd.DataFrame(plot_IE).to_csv('ie.csv', index=False)
+
+import pandas as pd
+pd.DataFrame(plot_II).to_csv('ii.csv', index=False)
+
+import pandas as pd
+pd.DataFrame(plot_EI).to_csv('ei.csv', index=False)
+
 
 from scipy.sparse import coo_matrix
 m = np.matrix(filtered[1:])
@@ -251,9 +272,9 @@ small_world_ring_inhib   = nx.watts_strogatz_graph(ni,mean_conns,0.25)
 nproc = sim.num_processes()
 nproc = 8
 host_name = socket.gethostname()
-node_id = sim.setup(timestep=0.01, min_delay=1.0, **extra)
+node_id = sim.setup(timestep=0.01, min_delay=1.0)#, **extra)
 print("Host #%d is on %s" % (node_id + 1, host_name))
-print("%s Initialising the simulator with %d thread(s)..." % (node_id, extra['threads']))
+#print("%s Initialising the simulator with %d thread(s)..." % (node_id, extra['threads']))
 
 
 #assert len(num_exc) < ml
@@ -270,11 +291,18 @@ all_cells = pop_exc + pop_inh
 
 for pe in pop_exc:
     r = random.uniform(0.0, 1.0)
+    print(r)
     pe.set_parameters(a=0.02, b=0.2, c=-65+15*r, d=8-r**2, i_offset=0)
-
+    print(pe.get_parameters())
 for pe in pop_inh:
     r = random.uniform(0.0, 1.0)
     pe.set_parameters(a=0.02+0.08*r, b=0.2-0.05*r, c=-65, d= 2, i_offset=0)
+    print(pe.get_parameters())
+
+print(len(pop_exc),'indexs of excitatory neurons')
+print(len(pop_inh),'indexs of inhibitory neurons')
+#with open('pickles/cells.p', 'wb') as f:
+#    pickle.dump([all_cells,pop_exc,pop_inh],f)
 
 
 num_exc = [ y for y,e in enumerate(plot_excit) if sum(e) > 0 ]
@@ -285,44 +313,26 @@ NINH = len(num_inh)
 
 print(len(all_cells))
 rng = NumpyRNG(seed=64754)
-'''
-ii_srcs = [int(i) for i in ii_srcs]
-
-def lintfix(lists):
-    lists = [ int(l) for l in lists 
-    return lists
-
-ee_srcs = lintfix(ee_srcs)
-ee_tgs = lintfix(ee_tgs)
-
-ii_srcs = all_cells[ii_srcs]
-
-ii_tgs = all_cells[list(ii_tgs)]
-ee_srcs = all_cells[list(ee_srcs)]
-ee_tgs = all_cells[list(ee_tgs)]
-ei_srcs = all_cells[list(ei_srcs)]
-ei_tgs = all_cells[list(ei_tgs)]
-ie_srcs = all_cells[list(ie_srcs)]
-ie_tgs = all_cells[list(ie_tgs)]
-'''
-rng = NumpyRNG(seed=64754)
 
 weight_gain_factors = {1:None,3:None,9:None,15:None,20:None}
 rng = NumpyRNG(seed=64754)
 
 for i,wg in enumerate(weight_gain_factors.keys()):
-    #exc_distr = RandomDistribution('normal', [3.125, 10e-2], rng=rng)
-    #exc_syn = sim.StaticSynapse(weight = exc_distr, delay=delay_distr)
+#def map_sim(xargs,sim):
+    #i,wg = xargs
 
-    exc_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
+    #exc_distr = RandomDistribution('normal', [3.125, 10e-2], rng=rng)
+    exc_syn = sim.StaticSynapse(weight = wg/100, delay=delay_distr)
+
+    #exc_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
 
     assert np.any(internal_conn_ee.conn_list[:,0]) < ee_srcs.size
     prj_exc_exc = sim.Projection(all_cells, all_cells, internal_conn_ee, exc_syn, receptor_type='excitatory')
-    inh_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
-    prj_exc_inh = sim.Projection(all_cells, all_cells, internal_conn_ei, inh_syn, receptor_type='inhibitory')
+    prj_exc_inh = sim.Projection(all_cells, all_cells, internal_conn_ei, exc_syn, receptor_type='excitatory')
 
     #inh_distr = RandomDistribution('normal', [5, 2.1e-4], rng=rng)
-    #inh_syn = sim.StaticSynapse(weight=inh_distr, delay=delay_distr)
+    #inh_syn = sim.StaticSynapse(weight=15, delay=delay_distr)
+    inh_syn = sim.StaticSynapse(weight = wg/100, delay=delay_distr)
 
 
     #iis = all_cells[[e[0] for e in IIlist]]
@@ -332,7 +342,7 @@ for i,wg in enumerate(weight_gain_factors.keys()):
     delay_distr = RandomDistribution('normal', [1, 100e-3], rng=rng)
     prj_inh_inh = sim.Projection(all_cells, all_cells, internal_conn_ii, inh_syn, receptor_type='inhibitory')
 
-    prj_inh_exc = sim.Projection(all_cells, all_cells, internal_conn_ie, exc_syn, receptor_type='excitatory')
+    prj_inh_exc = sim.Projection(all_cells, all_cells, internal_conn_ie, inh_syn, receptor_type='inhibitory')
     inh_distr = RandomDistribution('normal', [1, 2.1e-3], rng=rng)
 
     #inh_syn = sim.StaticSynapse(weight=inh_distr, delay=delay_distr)
@@ -340,7 +350,7 @@ for i,wg in enumerate(weight_gain_factors.keys()):
     # Variation in propogation delays are very important for self sustaininig network activity.
     # more so in point neurons which don't have internal propogation times.
 
-    noise = sim.NoisyCurrentSource(mean=1.5, stdev=1.0, start=0.0, stop=2000.0, dt=1.0)
+    noise = sim.NoisyCurrentSource(mean=1.5, stdev=1.0, start=0.0*qt.ms, stop=2000.0*qt.ms, dt=1.0)
     all_cells.inject(noise)
 
     #ext_stim = sim.Population(len(all_cells), sim.SpikeSourcePoisson(rate=7.5, duration=6000.0), label="expoisson")
@@ -362,102 +372,17 @@ for i,wg in enumerate(weight_gain_factors.keys()):
     neurons.initialize(v=-65.0, u=-14.0)
     # === Run the simulation =====================================================
     #sim.run(11704.0)
-    sim.run(2000)
+    tstop = 2000.0*qt.ms
+    sim.run(tstop)
     data = neurons.get_data().segments[0]
+    print(len(data.analogsignals[0].times))
     with open('pickles/qi'+str(wg)+'.p', 'wb') as f:
         pickle.dump(data,f)
+import pca
 
-'''
-stdp = STDPMechanism(
-          weight=4.0, #0.02,  # this is the initial value of the weight
-          delay="0.2 + 0.01*d",
-          timing_dependence=SpikePairRule(tau_plus=20.0, tau_minus=20.0,
-                                          A_plus=0.01, A_minus=0.012),
-          weight_dependence=AdditiveWeightDependence(w_min=0.01, w_max=10.0))
-
-top_3_hubs = all_cells[top_out[-3:][1]]
-'''
-
-'''
-from pyNN.utility.plotting import Figure, Panel, comparison_plot, plot_spiketrains
-data = neurons.get_data().segments[0]
-v = data.filter(name="v")
-for i in v:
-  Figure(
-    Panel(i, ylabel="Membrane potential (mV)", xticks=True,
-          xlabel="Time (ms)", yticks=True),
-    #Panel(u, ylabel="u variable (units?)"),
-    annotations="Simulated with"
-  )
-#Figure.savefig('voltage_time.png')
-
-import pickle
-
-#data = neurons.get_data().segments[0]
-v0 =  neurons[(0,)].get_data().segments[0].filter(name="v")[0]
-v1 =  neurons[(1,)].get_data().segments[0].filter(name="v")[0]
-#plt.clf()
-plt.plot(v0,range(0,len(v0)))
-plt.plot(v1,range(0,len(v0)))
-plt.show()
-
-def plot_spiketrains(segment):
-  """
-  Plots the spikes of all the cells in the given segments
-  """
-  for spiketrain in segment.spiketrains:
-      print(spiketrain)
-      y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
-      plt.plot(spiketrain, y, 'b')
-      plt.ylabel('Neuron number')
-      plt.xlabel('Spikes')
-  plt.savefig('raster_plot.png')
-spikes = neurons.get_data("spikes").segments[0]
-data = neurons.get_data().segments[0]
-plot_spiketrains(data)
-
-
-Figure(
-    Panel(v0, ylabel="Membrane potential (mV)", xticks=True,
-          xlabel="Time (ms)", yticks=True),
-    #Panel(u, ylabel="u variable (units?)"),
-    annotations="Simulated with"
-)
-
-Figure(
-    Panel(v1, ylabel="Membrane potential (mV)", xticks=True,
-          xlabel="Time (ms)", yticks=True),
-    #Panel(u, ylabel="u variable (units?)"),
-    annotations="Simulated with"
-)
-'''
-'''
-exc_spike_times = [
-    6000+250,
-    6000+500,
-    6000+520,
-    6000+540,
-    6000+1250,
-]
-
-inh_spike_times = [
-    6000+750,
-    6000+1000,
-    6000+1020,
-    6000+1040,
-    6000+1250,
-]
-
-stimulus_exc = sim.Population(1, sim.SpikeSourceArray, {
-    'spike_times': exc_spike_times})
-stimulus_inh = sim.Population(1, sim.SpikeSourceArray, {
-    'spike_times': inh_spike_times})
-
-connector = sim.OneToOneConnector()
-ext_syn = sim.StaticSynapse(weight=2.925)
-
-projections = [
-    sim.Projection(stimulus_exc, top_3_hubs, connector, ext_syn, receptor_type='excitatory'),
-    sim.Projection(stimulus_inh, top_3_hubs, connector, ext_syn, receptor_type='inhibitory'),
-]
-'''
+#iter_sim = [ (i,wg) for i,wg in enumerate(weight_gain_factors.keys()) ]
+#import dask.bag as db
+#iter_sim = db.from_sequence(iter_sim,4)
+#from itertools import repeat
+#_ = list(map(map_sim,iter_sim,repeat(sim)))
+#_ = list(db.map(map_sim,iter_sim).compute());
