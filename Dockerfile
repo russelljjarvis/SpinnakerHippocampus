@@ -76,3 +76,15 @@ RUN echo 'options(repos = c(CRAN = "https://cloud.r-project.org/"), download.fil
 	&& install.r docopt \
 	&& rm -rf /tmp/downloaded_packages/ /tmp/*.rds \
 && sudo rm -rf /var/lib/apt/lists/*
+RUN sudo chown -R jovyan $HOME
+
+RUN sudo /opt/conda/bin/pip install natsort
+RUN sudo /opt/conda/bin/pip install pyspike pyNN lazyarray
+
+
+WORKDIR /opt/conda/lib/python3.5/site-packages/pyNN/neuron/nmodl
+RUN nrnivmodl
+
+RUN sudo chown -R jovyan $HOME
+
+RUN R -e 'install.packages(c("rPython"))'
