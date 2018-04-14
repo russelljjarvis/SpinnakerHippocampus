@@ -105,10 +105,10 @@ def sim_runner(wgf):
     delay_distr = RandomDistribution('normal', [2, 1e-1], rng=rng)
     weight_distr = RandomDistribution('normal', [45, 1e-1], rng=rng)
 
-    index_exc = [ i for i,d in enumerate(dfm) if '+' in d[0] ]
-    index_inh = [ i for i,d in enumerate(dfm) if '-' in d[0] ]
 
-    #import pdb; pdb.set_trace()
+    sanity_e = []
+    sanity_i = []
+
     EElist = []
     IIlist = []
     EIlist = []
@@ -116,17 +116,34 @@ def sim_runner(wgf):
 
     for i,j in enumerate(filtered):
       for k,xaxis in enumerate(j):
+        if xaxis == 1 or xaxis == 2:
+          source = i
+          sanity_e.append(i)
+          target = k
+
+        if xaxis ==-1 or xaxis == -2:
+          sanity_i.append(i)
+          source = i
+          target = k
+
+    index_exc = list(set(sanity_e))
+    index_inh = list(set(sanity_i))
+    for i,j in enumerate(filtered):
+      for k,xaxis in enumerate(j):
         if xaxis==1 or xaxis == 2:
           source = i
+          sanity_e.append(i)
           target = k
           delay = delay_distr.next()
           weight = 1.0
           if target in index_inh:
-              EIlist.append((source,target,delay,weight))
+             EIlist.append((source,target,delay,weight))
           else:
-              EElist.append((source,target,delay,weight))
+             EElist.append((source,target,delay,weight))
 
         if xaxis==-1 or xaxis == -2:
+          sanity_i.append(i)
+
           source = i
           target = k
           delay = delay_distr.next()
@@ -135,6 +152,7 @@ def sim_runner(wgf):
               IElist.append((source,target,delay,weight))
           else:
               IIlist.append((source,target,delay,weight))
+
 
     internal_conn_ee = sim.FromListConnector(EElist)
     ee = internal_conn_ee.conn_list
@@ -178,7 +196,7 @@ def sim_runner(wgf):
 
 
     plot_EE = np.zeros(shape=(ml,ml), dtype=bool)
-    plot_ss = np.zeros(shape=(ml,ml))
+    #plot_ss = np.zeros(shape=(ml,ml))
 
     plot_II = np.zeros(shape=(ml,ml), dtype=bool)
     plot_EI = np.zeros(shape=(ml,ml), dtype=bool)
@@ -186,19 +204,19 @@ def sim_runner(wgf):
 
     for i in EElist:
         plot_EE[i[0],i[1]] = int(0)
-        plot_ss[i[0],i[1]] = int(1)
+        #plot_ss[i[0],i[1]] = int(1)
 
         if i[0]!=i[1]: # exclude self connections
             plot_EE[i[0],i[1]] = int(1)
-            plot_ss[i[0],i[1]] = int(1)
+            #plot_ss[i[0],i[1]] = int(1)
 
             pre_exc.append(i[0])
             post_exc.append(i[1])
 
-    print(plot_ss)
+    #print(plot_ss)
     print(pre_exc)
     print(post_exc)
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
 
 
     assert len(pre_exc) == len(post_exc)
@@ -274,21 +292,22 @@ def sim_runner(wgf):
         m = coo_matrix(m)
 
     Gexc_ud = nx.Graph(plot_excit)
+    avg_clustering = nx.average_clustering(Gexc_ud)#, nodes=None, weight=None, count_zeros=True)[source]
+
     rc = nx.rich_club_coefficient(Gexc_ud,normalized=False)
     print('This graph structure as rich as: ',rc[0])
-    Gexc = nx.DiGraph(plot_excit)
-    avg_clustering = average_clustering(G)#, nodes=None, weight=None, count_zeros=True)[source]
+    gexc = nx.DiGraph(plot_excit)
 
-    gexcc = nx.betweenness_centrality(Gexc)
+    gexcc = nx.betweenness_centrality(gexc)
     #top_inh = sorted(([ (v,k) for k, v in dict(ginh).items() ]), reverse=True)
-    top_exc = sorted(([ (v,k) for k, v in dict(gexc).items() ]), reverse=True)
+    top_exc = sorted(([ (v,k) for k, v in dict(gexcc).items() ]), reverse=True)
 
 
 
-    in_degree = G.in_degree()
+    in_degree = gexc.in_degree()
     top_in = sorted(([ (v,k) for k, v in in_degree.items() ]))
     in_hub = top_in[-1][1]
-    out_degree = G.out_degree()
+    out_degree = gexc.out_degree()
     top_out = sorted(([ (v,k) for k, v in out_degree.items() ]))
     out_hub = top_out[-1][1]
     mean_out = np.mean(list(out_degree.values()))
@@ -327,10 +346,10 @@ def sim_runner(wgf):
     pop_exc =  sim.Population(len(num_exc), sim.Izhikevich(a=0.02, b=0.2, c=-65, d=8, i_offset=0))
     pop_inh = sim.Population(len(num_inh), sim.Izhikevich(a=0.02, b=0.25, c=-65, d=2, i_offset=0))
 
-    weight_gain_factors = {1:None,3:None,9:None,15:None,20:None}
+    #weight_gain_factors = {1:None,3:None,9:None,15:None,20:None}
     all_cells = None
     all_cells = pop_exc + pop_inh
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     #all_excb = pop_exc
     # pop_exc between hub excluded
     # top_exc[1]
@@ -398,12 +417,12 @@ def sim_runner(wgf):
     #1750.0 pA
     '''
 
-    noise = sim.NoisyCurrentSource(mean=0.84/1000.0, stdev=6.00/1000.0, start=0.0, stop=2000.0, dt=1.0)
+    noise = sim.NoisyCurrentSource(mean=0.74/1000.0, stdev=4.00/1000.0, start=0.0, stop=2000.0, dt=1.0)
     pop_exc.inject(noise)
     #1000.0 pA
 
 
-    noise = sim.NoisyCurrentSource(mean=1.640/1000.0, stdev=6.00/1000.0, start=0.0, stop=2000.0, dt=1.0)
+    noise = sim.NoisyCurrentSource(mean=1.440/1000.0, stdev=4.00/1000.0, start=0.0, stop=2000.0, dt=1.0)
     pop_inh.inject(noise)
 
     ##

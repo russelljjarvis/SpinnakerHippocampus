@@ -80,6 +80,8 @@ def iter_plot0(md):
     for spiketrain in mdf1.spiketrains:
         #spiketrain = mdf1.spiketrains[index]
         y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
+        #import sklearn
+        #sklearn.decomposition.NMF(y)
         # argument edges is the time interval you want to be considered.
         pspikes = pyspike.SpikeTrain(spiketrain,edges=(0,len(ass)))
         spike_trains.append(pspikes)
@@ -363,6 +365,7 @@ def iter_plot0(md):
 
     plt.savefig(str('weight_')+str(k)+'cluster_spike_sync_distance'+'.png');plt.close()
 
+
 def iter_plot1(md):
     index, mdf1 = md
     wgf = {0.025:None,0.05:None,0.125:None,0.25:None,0.3:None,0.4:None,0.5:None,1.0:None,1.5:None,2.0:None,2.5:None,3.0:None}
@@ -444,14 +447,9 @@ def iter_plot1(md):
     mdf1 = None
     coh = None
 
-def te():
-    import os
-    os.system('sudo /opt/conda/bin/pip install git+https://github.com/pwollstadt/IDTxl.git')
-    os.system('sudo /opt/conda/bin/pip jp')
-
+def te(mdf1):
     from idtxl.multivariate_te import MultivariateTE
     from idtxl.data import Data
-
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
@@ -472,7 +470,14 @@ def te():
                                         n_repl), 'psr')
     print(dat)
     nw_0 = MultivariateTE()
-    nw_0._initialise(settings, dat, 'all', target)
+    yy = []
+    for spiketrain in mdf1.spiketrains:
+        y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
+        yy.append(y)
+    import sklearn
+    NMF = sklearn.decomposition.NMF(np.array(yy))
+    print(NMF)
+    #nw_0._initialise(settings, np.array(yy), 'all', target)
     #nw.analyse_single_target(settings=settings, data=dat, target=1)
 
 # Invalid: min lag sources bigger
@@ -492,6 +497,7 @@ titems = [ (k,mdf1) for k,mdf1 in enumerate(mdfloop.values()) ]
 
 import dask.bag as db
 
+te(list(mdfloop.values())[0])
 grid = db.from_sequence(titems,npartitions = 3)
 _ = list(db.map(iter_plot0,grid).compute());
 

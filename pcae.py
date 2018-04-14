@@ -1,4 +1,3 @@
-
 import matplotlib
 matplotlib.use('Agg')
 from natsort import natsorted, ns
@@ -69,16 +68,21 @@ def iter_pca(md):
     if lens >10:
         pca = PCA()
         data = np.array(cleaned)#np.array(mdf1.analogsignals[0].as_array().T)
-        pca = PCA(n_components=3).fit(data)
-        data_projected = np.dot(pca.components_,data.T).T
+        pca = PCA(n_components=lens).fit(data)
 
-        print(pca.components_.shape_,'components_')
-        plt.plot([i for i in pca.components_.shape_[0]],pca.components_.shape_[0])
-        plt.title('PCA features to extract')
-        plt.xlabel('Dimension directions')
-        plt.ylabel('Weights for dimension after rotation')
-        plt.savefig(str('excitatory_weight_')+str(index)+'_analogsignals'+'.png');
-        plt.close()
+        #print(pca.components_.shape_)
+
+        data_projected = np.dot(pca.components_,data.T).T
+        #import pdb
+        #pdb.set_trace()
+        #print(pca.components_.shape_,'components_')
+
+        #plt.plot([i for i in pca.components_.shape_[0]],pca.components_.shape_[0])
+        #plt.title('PCA features to extract')
+        #plt.xlabel('Dimension directions')
+        #plt.ylabel('Weights for dimension after rotation')
+        #plt.savefig(str('excitatory_weight_')+str(index)+'_analogsignals'+'.png');
+        #plt.close()
 
         signals = np.dot(data.T,data_projected)
         signals = signals.T
@@ -96,7 +100,7 @@ def iter_pca(md):
         plt.xlabel('$ms$')
         plt.ylabel('$mV$')
         plt.legend(loc="upper left")
-        plt.savefig(str('projections_weight_value_')+str(md)+'excitatory_analogsignals'+'.png');
+        plt.savefig(str('projections_weight_value_')+str(index)+'excitatory_analogsignals'+'.png');
         plt.close()
         print(data_projected,'data')
         print(pca.components_,'component direction vectors')

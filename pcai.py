@@ -55,12 +55,12 @@ def iter_pca(md):
             else:
                 plt.plot(ass.times,vm)#,label='neuron identifier '+str(i)))
                 cleaned.append(vm)
-            #vm = s#.as_array()[:,i]
+
     print(len(cleaned))
     plt.title('All Neurons $V_{m}$ versus Time')
     plt.xlabel('Time $(ms)$')
     plt.ylabel('Voltage $(mV)$')
-    plt.savefig(str(inhibitory_weight_')+str(index)+'_analogsignals'+'.png');
+    plt.savefig(str('inhibitory_weight_')+str(index)+'_analogsignals'+'.png');
 
     plt.close()
 
@@ -71,7 +71,7 @@ def iter_pca(md):
         data = np.array(cleaned)#np.array(mdf1.analogsignals[0].as_array().T)
         pca = PCA(n_components=lens).fit(data)
 
-        print(pca.components_.shape_)
+        #print(pca.components_.shape_)
 
         data_projected = np.dot(pca.components_,data.T).T
 
@@ -91,7 +91,7 @@ def iter_pca(md):
         plt.xlabel('$ms$')
         plt.ylabel('$mV$')
         plt.legend(loc="upper left")
-        plt.savefig(str('projections_weight_value_')+str(md)+'excitatory_analogsignals'+'.png');
+        plt.savefig(str('projections_weight_value_')+str(index)+'excitatory_analogsignals'+'.png');
         plt.close()
         print(data_projected,'data')
         print(pca.components_,'component direction vectors')
