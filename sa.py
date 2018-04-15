@@ -38,9 +38,14 @@ import numpy as np
 import pyspike as spk
 
 
+
 def iter_plot0(md):
     import seaborn as sns
-
+    import pickle
+    with open('cell_indexs.p','rb') as f:
+        returned_list = pickle.load(f)
+    index_exc = returned_list[0]
+    index_inh = returned_list[1]
     index, mdf1 = md
     #wgf = {0.025:None,0.05:None,0.125:None,0.25:None,0.3:None,0.4:None,0.5:None,1.0:None,1.5:None,2.0:None,2.5:None,3.0:None}
     wgf = {0.0025:None,0.0125:None,0.025:None,0.05:None,0.125:None,0.25:None,0.3:None,0.4:None,0.5:None,1.0:None,1.5:None,2.0:None,2.5:None,3.0:None}
@@ -139,8 +144,7 @@ def iter_plot0(md):
     plt.figure()
     plt.clf()
     plt.title('Single Neuron $V_{m}$ trace')
-
-    plt.plot(ass.times,vm_not_spiking[110])
+    plt.plot(ass.times[0:int(len(ass.times)/5)],vm_not_spiking[index_exc[0]][0:int(len(ass.times)/5)])
     plt.xlabel('$ms$')
     plt.ylabel('$mV$')
     plt.xlabel('Time $(ms)$')
@@ -152,12 +156,11 @@ def iter_plot0(md):
     plt.figure()
     plt.clf()
     plt.title('Single Neuron $V_{m}$ trace')
-
-    plt.plot(ass.times,vm_not_spiking[55])
+    plt.plot(ass.times[0:int(len(ass.times)/5)],vm_not_spiking[index_inh[0]][0:int(len(ass.times)/5)])
     plt.xlabel('$ms$')
     plt.ylabel('$mV$')
 
-    plt.savefig(str('weight_')+str(k)+'iispecific_analogsignals'+'.png');
+    plt.savefig(str('weight_')+str(k)+'inhibitory_analogsignals'+'.png');
     plt.close()
 
     cvs = [0 for i in range(0,len(spike_trains))]
@@ -187,11 +190,6 @@ def iter_plot0(md):
     import numpy
     a = numpy.asarray(rates)
     numpy.savetxt('pickles/'+str('weight_')+str(k)+'firing_of_rate.csv', a, delimiter=",")
-    import pickle
-    with open('cell_indexs.p','rb') as f:
-        returned_list = pickle.load(f)
-    index_exc = returned_list[0]
-    index_inh = returned_list[1]
 
     cvs = [i for i in cvs if i!=0 ]
     cells = [i for i in range(0,len(cvs))]
@@ -204,8 +202,8 @@ def iter_plot0(md):
     mcv = np.mean(cvs)
     #plt.scatter(cells,cvs)
     cvs = np.array(cvs)
-    plt.scatter(index_inh,cvs[index_inh],label="inhibitory cells"))
-    plt.scatter(index_exc,cvs[index_exc],label="excitatory cells"))
+    plt.scatter(index_inh,cvs[index_inh],label="inhibitory cells")
+    plt.scatter(index_exc,cvs[index_exc],label="excitatory cells")
     plt.legend(loc="upper left")
 
 
@@ -222,8 +220,8 @@ def iter_plot0(md):
     axes.set_xlabel('Neuron number')
     axes.set_ylabel('Spikes per second')
     rates = np.array(rates)
-    plt.scatter(index_inh,rates[index_inh],label="inhibitory cells"))
-    plt.scatter(index_exc,rates[index_exc],label="excitatory cells"))
+    plt.scatter(index_inh,rates[index_inh],label="inhibitory cells")
+    plt.scatter(index_exc,rates[index_exc],label="excitatory cells")
     plt.legend(loc="upper left")
     fig.tight_layout()
     plt.savefig(str('firing_rates_per_cell_')+str(k)+str(mcv)+'.png');
