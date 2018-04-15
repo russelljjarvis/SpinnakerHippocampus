@@ -1,0 +1,12 @@
+name: AdjacencyMatrix
+title: AdjacencyMatrix
+username:
+account: drpetty
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 315814
+bundleId: 1319973
+url: https://drpetty.shinyapps.io/AdjacencyMatrix/
+when: 1523832065.09504
+asMultiple: FALSE
+asStatic: FALSE
