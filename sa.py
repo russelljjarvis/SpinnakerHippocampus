@@ -144,7 +144,7 @@ def iter_plot0(md):
     plt.figure()
     plt.clf()
     plt.title('Single Neuron $V_{m}$ trace')
-    plt.plot(ass.times[0:int(len(ass.times)/5)],vm_not_spiking[index_exc[0]][0:int(len(ass.times)/5)])
+    plt.plot(ass.times[0:int(len(ass.times)/10)],vm_not_spiking[index_exc[0]][0:int(len(ass.times)/10)])
     plt.xlabel('$ms$')
     plt.ylabel('$mV$')
     plt.xlabel('Time $(ms)$')
@@ -156,7 +156,7 @@ def iter_plot0(md):
     plt.figure()
     plt.clf()
     plt.title('Single Neuron $V_{m}$ trace')
-    plt.plot(ass.times[0:int(len(ass.times)/5)],vm_not_spiking[index_inh[0]][0:int(len(ass.times)/5)])
+    plt.plot(ass.times[0:int(len(ass.times)/10)],vm_not_spiking[index_inh[0]][0:int(len(ass.times)/10)])
     plt.xlabel('$ms$')
     plt.ylabel('$mV$')
 

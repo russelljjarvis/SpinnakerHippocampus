@@ -29,9 +29,6 @@ print(rheobase0['value'],rheobase1['value'])
 assert rheobase0['value'] != rheobase1['value']
 '''
 
-    #print(rheobase['value'])
-    #import pdb; pdb.set_trace()
-
 def sim_runner(wgf):
     wg = wgf
 
@@ -128,6 +125,18 @@ def sim_runner(wgf):
 
     index_exc = list(set(sanity_e))
     index_inh = list(set(sanity_i))
+    import pickle
+    with open('cell_indexs.p','wb') as f:
+        returned_list = [index_exc, index_inh]
+        pickle.dump(returned_list,f)
+
+    import numpy
+    a = numpy.asarray(index_exc)
+    numpy.savetxt('pickles/'+str(k)+'excitatory_nunber_labels.csv', a, delimiter=",")
+    import numpy
+    a = numpy.asarray(index_inh)
+    numpy.savetxt('pickles/'+str(k)+'inhibitory_nunber_labels.csv', a, delimiter=",")
+
     for i,j in enumerate(filtered):
       for k,xaxis in enumerate(j):
         if xaxis==1 or xaxis == 2:
@@ -194,10 +203,7 @@ def sim_runner(wgf):
     rng = NumpyRNG(seed=64754)
     delay_distr = RandomDistribution('normal', [2, 1e-1], rng=rng)
 
-
     plot_EE = np.zeros(shape=(ml,ml), dtype=bool)
-    #plot_ss = np.zeros(shape=(ml,ml))
-
     plot_II = np.zeros(shape=(ml,ml), dtype=bool)
     plot_EI = np.zeros(shape=(ml,ml), dtype=bool)
     plot_IE = np.zeros(shape=(ml,ml), dtype=bool)
@@ -208,15 +214,10 @@ def sim_runner(wgf):
 
         if i[0]!=i[1]: # exclude self connections
             plot_EE[i[0],i[1]] = int(1)
-            #plot_ss[i[0],i[1]] = int(1)
 
             pre_exc.append(i[0])
             post_exc.append(i[1])
 
-    #print(plot_ss)
-    print(pre_exc)
-    print(post_exc)
-    #import pdb; pdb.set_trace()
 
 
     assert len(pre_exc) == len(post_exc)
@@ -258,12 +259,12 @@ def sim_runner(wgf):
 
     import pickle
     with open('graph_inhib.p','wb') as f:
-       pickle.dump(plot_inhib,f)
+       pickle.dump(plot_inhib,f, protocol=2)
 
 
     import pickle
     with open('graph_excit.p','wb') as f:
-       pickle.dump(plot_excit,f)
+       pickle.dump(plot_excit,f, protocol=2)
 
 
     #with open('cell_names.p','wb') as f:
@@ -286,7 +287,7 @@ def sim_runner(wgf):
 
     bool_matrix = np.add(plot_excit,plot_inhib)
     with open('bool_matrix.p','wb') as f:
-       pickle.dump(bool_matrix,f)
+       pickle.dump(bool_matrix,f, protocol=2)
 
     if not isinstance(m, coo_matrix):
         m = coo_matrix(m)
@@ -299,10 +300,7 @@ def sim_runner(wgf):
     gexc = nx.DiGraph(plot_excit)
 
     gexcc = nx.betweenness_centrality(gexc)
-    #top_inh = sorted(([ (v,k) for k, v in dict(ginh).items() ]), reverse=True)
     top_exc = sorted(([ (v,k) for k, v in dict(gexcc).items() ]), reverse=True)
-
-
 
     in_degree = gexc.in_degree()
     top_in = sorted(([ (v,k) for k, v in in_degree.items() ]))
@@ -333,48 +331,55 @@ def sim_runner(wgf):
     host_name = socket.gethostname()
     node_id = sim.setup(timestep=0.01, min_delay=1.0)#, **extra)
     print("Host #%d is on %s" % (node_id + 1, host_name))
-    #print("%s Initialising the simulator with %d thread(s)..." % (node_id, extra['threads']))
-    #print(len(all_cells))
     rng = NumpyRNG(seed=64754)
 
-    #rng = NumpyRNG(seed=64754)
+    #pop_size = len(num_exc)+len(num_inh)
+    #num_exc = [ i for i,e in enumerate(plot_excit) if sum(e) > 0 ]
+    #num_inh = [ y for y,i in enumerate(plot_inhib) if sum(i) > 0 ]
+    #pop_exc =  sim.Population(len(num_exc), sim.Izhikevich(a=0.02, b=0.2, c=-65, d=8, i_offset=0))
+    #pop_inh = sim.Population(len(num_inh), sim.Izhikevich(a=0.02, b=0.25, c=-65, d=2, i_offset=0))
 
 
-    pop_size = len(num_exc)+len(num_inh)
-    num_exc = [ i for i,e in enumerate(plot_excit) if sum(e) > 0 ]
-    num_inh = [ y for y,i in enumerate(plot_inhib) if sum(i) > 0 ]
-    pop_exc =  sim.Population(len(num_exc), sim.Izhikevich(a=0.02, b=0.2, c=-65, d=8, i_offset=0))
-    pop_inh = sim.Population(len(num_inh), sim.Izhikevich(a=0.02, b=0.25, c=-65, d=2, i_offset=0))
-
-    #weight_gain_factors = {1:None,3:None,9:None,15:None,20:None}
-    all_cells = None
-    all_cells = pop_exc + pop_inh
-    #import pdb; pdb.set_trace()
-    #all_excb = pop_exc
-    # pop_exc between hub excluded
-    # top_exc[1]
-
-
-    #for i,wg in enumerate(weight_gain_factors.keys()):
-
+    #index_exc = list(set(sanity_e))
+    #index_inh = list(set(sanity_i))
+    all_cells = sim.Population(len(index_exc)+len(index_inh), sim.Izhikevich(a=0.02, b=0.2, c=-65, d=8, i_offset=0))
     #all_cells = None
     #all_cells = pop_exc + pop_inh
+    pop_exc = sim.PopulationView(all_cells,index_exc)
+    pop_inh = sim.PopulationView(all_cells,index_inh)
+    #print(pop_exc)
+    #print(dir(pop_exc))
+    for pe in pop_exc:
+        print(pe)
+        #import pdb
+        pe = all_cells[pe]
+        #pdb.set_trace()
+        #pe = all_cells[i]
+        r = random.uniform(0.0, 1.0)
+        pe.set_parameters(a=0.02, b=0.2, c=-65+15*r, d=8-r**2, i_offset=0)
+        #pop_exc.append(pe)
 
+    #pop_exc = sim.Population(pop_exc)
+    for pi in index_inh:
+        pi = all_cells[pi]
+        #print(pi)
+        #pi = all_cells[i]
+        r = random.uniform(0.0, 1.0)
+        pi.set_parameters(a=0.02+0.08*r, b=0.25-0.05*r, c=-65, d= 2, i_offset=0)
+        #pop_inh.append(pi)
+    #pop_inh = sim.Population(pop_inh)
+
+    '''
     for pe in pop_exc:
         r = random.uniform(0.0, 1.0)
         pe.set_parameters(a=0.02, b=0.2, c=-65+15*r, d=8-r**2, i_offset=0)
-        #attrs = {'a':0.02, 'b':0.2, 'c':-65+15*r, 'd':8-r**2 }
-
-
-    #dtc = dtc_to_rheo(dtc)
 
     for pi in pop_inh:
         r = random.uniform(0.0, 1.0)
-        pi.set_parameters(a=0.02+0.08*r, b=0.2-0.05*r, c=-65, d= 2, i_offset=0)
+        pi.set_parameters(a=0.02+0.08*r, b=0.25-0.05*r, c=-65, d= 2, i_offset=0)
+    '''
     NEXC = len(num_exc)
     NINH = len(num_inh)
-
-
 
     exc_syn = sim.StaticSynapse(weight = wg, delay=delay_distr)
     assert np.any(internal_conn_ee.conn_list[:,0]) < ee_srcs.size
@@ -398,7 +403,6 @@ def sim_runner(wgf):
         for w in prj.weightHistogram():
             for i in w:
                 print(i)
-            #assert w==wg
     prj_check(prj_exc_exc)
     prj_check(prj_exc_inh)
     prj_check(prj_inh_exc)
