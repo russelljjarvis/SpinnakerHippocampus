@@ -3,6 +3,7 @@ mpl.use('Agg')
 
 # coding: utf-8
 import os
+#os.system('bash install.sh')
 import matplotlib.pyplot as plt
 #mpl.use('Agg')
 
@@ -17,8 +18,6 @@ import pickle
 import numpy as np
 import pyspike
 
-#from elephant import conv
-#import natsort
 from natsort import natsorted, ns
 
 import elephant.conversion as conv
@@ -43,7 +42,9 @@ def iter_plot0(md):
     import seaborn as sns
 
     index, mdf1 = md
-    wgf = {0.025:None,0.05:None,0.125:None,0.25:None,0.3:None,0.4:None,0.5:None,1.0:None,1.5:None,2.0:None,2.5:None,3.0:None}
+    #wgf = {0.025:None,0.05:None,0.125:None,0.25:None,0.3:None,0.4:None,0.5:None,1.0:None,1.5:None,2.0:None,2.5:None,3.0:None}
+    wgf = {0.0025:None,0.0125:None,0.025:None,0.05:None,0.125:None,0.25:None,0.3:None,0.4:None,0.5:None,1.0:None,1.5:None,2.0:None,2.5:None,3.0:None}
+
     weight_gain_factors = {k:v for k,v in enumerate(wgf.keys())}
     print(len(weight_gain_factors))
     print(weight_gain_factors.keys())
@@ -57,11 +58,14 @@ def iter_plot0(md):
 
     time_points = ass.times
     avg = np.mean(ass, axis=0)  # Average over signals of Segment
-    maxx = np.max(ass, axis=0)  # Average over signals of Segment
-
+    #maxx = np.max(ass, axis=0)  # Average over signals of Segment
+    std = np.std(ass, axis=0)  # Average over signals of Segment
+    #avg_minus =
     plt.figure()
     plt.plot([i for i in range(0,len(avg))], avg)
-    plt.title("Peak amplitude per neuron ")
+    plt.plot([i for i in range(0,len(std))], std)
+
+    plt.title("Mean and Standard Dev of $V_{m}$ amplitude per neuron ")
     plt.xlabel('time $(ms)$')
     plt.xlabel('Voltage $(mV)$')
 
@@ -158,26 +162,21 @@ def iter_plot0(md):
 
     cvs = [0 for i in range(0,len(spike_trains))]
     cvsd = {}
-    cvse = []
+    cvs = []
     cvsi = []
     rates = [] # firing rates per cell. in spikes a second.
     for i,j in enumerate(spike_trains):
         rates.append(float(len(j)/2.0))
         cva = cv(j)
         if np.isnan(cva) or cva == 0:
-            cvs[i] = 0
-            cvsd[i] = 0
+            pass
+            #cvs[i] = 0
+            #cvsd[i] = 0
         else:
-            cvs[i] = cva
-            cvsd[i] = cva
-
-        if i<43:
-            cvse.append(cvs[i])
-            cvsi.append(0)
-
-        elif i>=43:
-            cvse.append(0)
-            cvsi.append(cvs[i])
+            pass
+            #cvs[i] = cva
+            #cvsd[i] = cva
+        cvs.append(cva)
     #import pickle
     #with open(str('weight_')+str(k)+'coefficients_of_variation.p','wb') as f:
     #   pickle.dump([cvs,cvsd],f)
@@ -188,7 +187,11 @@ def iter_plot0(md):
     import numpy
     a = numpy.asarray(rates)
     numpy.savetxt('pickles/'+str('weight_')+str(k)+'firing_of_rate.csv', a, delimiter=",")
-
+    import pickle
+    with open('cell_indexs.p','rb') as f:
+        returned_list = pickle.load(f)
+    index_exc = returned_list[0]
+    index_inh = returned_list[1]
 
     cvs = [i for i in cvs if i!=0 ]
     cells = [i for i in range(0,len(cvs))]
@@ -200,8 +203,11 @@ def iter_plot0(md):
     axes.set_ylabel('CV estimate')
     mcv = np.mean(cvs)
     #plt.scatter(cells,cvs)
-    plt.scatter([i for i in range(0,len(cvse))],cvse)
-    plt.scatter([i for i in range(0,len(cvsi))],cvsi)
+    cvs = np.array(cvs)
+    plt.scatter(index_inh,cvs[index_inh],label="inhibitory cells"))
+    plt.scatter(index_exc,cvs[index_exc],label="excitatory cells"))
+    plt.legend(loc="upper left")
+
 
     fig.tight_layout()
     plt.savefig(str('weight_')+str(k)+'cvs_mean_'+str(mcv)+'.png');
@@ -215,11 +221,10 @@ def iter_plot0(md):
     axes.set_title('Firing Rate Versus Neuron Number at mean f='+str(np.mean(rates))+str('(Spike Per Second)'))
     axes.set_xlabel('Neuron number')
     axes.set_ylabel('Spikes per second')
-    #mcv = np.mean(cvs)
-    #plt.scatter(cells,cvs)
-    #plt.scatter([i for i in range(0,len(cvse))],cvse)
-    plt.scatter([i for i in range(0,len(rates))],rates)
-
+    rates = np.array(rates)
+    plt.scatter(index_inh,rates[index_inh],label="inhibitory cells"))
+    plt.scatter(index_exc,rates[index_exc],label="excitatory cells"))
+    plt.legend(loc="upper left")
     fig.tight_layout()
     plt.savefig(str('firing_rates_per_cell_')+str(k)+str(mcv)+'.png');
     plt.close()
@@ -254,6 +259,10 @@ def iter_plot0(md):
     plt.clf()
     for (i, spike_train) in enumerate(spike_trains):
         plt.scatter(spike_train, i*np.ones_like(spike_train), marker='.')
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Cell identifier')
+    plt.title('Raster Plot for weight strength:'+str(k))
+
     plt.savefig(str('weight_')+str(k)+'raster_plot'+'.png');
     plt.close()
 
@@ -261,6 +270,8 @@ def iter_plot0(md):
     f = spk.isi_profile(spike_trains, indices=[0, 1])
     x, y = f.get_plottable_data()
 
+    #text_file.close()
+    text_file = open(str('weight_')+str(index)+'net_out.txt', 'w')
 
     plt.figure()
     plt.plot(x, np.abs(y), '--k', label="ISI-profile")
@@ -268,15 +279,39 @@ def iter_plot0(md):
     f = spk.spike_profile(spike_trains, indices=[0, 1])
     x, y = f.get_plottable_data()
     plt.plot(x, y, '-b', label="SPIKE-profile")
-    print("SPIKE-distance: %.8f" % f.avrg())
+    #print("SPIKE-distance: %.8f" % f.avrg())
+    string_to_write = str("ISI-distance:")+str(f.avrg())+str("\n\n")
+    plt.title(string_to_write)
+    plt.xlabel('Time $(ms)$')
+    plt.ylabel('ISI distance')
     plt.legend(loc="upper left")
     plt.savefig(str('weight_')+str(k)+'ISI_distance_bivariate'+'.png');plt.close()
+    text_file.write(string_to_write)
+
+
+
+
+    #text_file.write("SPIKE-distance: %.8f" % f.avrg())
+    #text_file.write("\n\n")
+
 
     plt.figure()
     f = spk.spike_sync_profile(spike_trains[0], spike_trains[1])
     x, y = f.get_plottable_data()
     plt.plot(x, y, '--ok', label="SPIKE-SYNC profile")
-    print("Average:", f.avrg())
+    print(f,f.avrg())
+    print("Average:"+ str(f.avrg()))
+    #print(len(f.avrg()),f.avrg())
+    string_to_write = str("instantaneous synchrony:")+str(f.avrg())+'weight: '+str(index)
+
+    plt.title(string_to_write)
+    plt.xlabel('Time $(ms)$')
+    plt.ylabel('instantaneous synchrony')
+
+    text_file.write(string_to_write)
+
+    #text_file.write(list())
+
     f = spk.spike_profile(spike_trains[0], spike_trains[1])
     x, y = f.get_plottable_data()
 
@@ -297,8 +332,11 @@ def iter_plot0(md):
     f_psth = spk.psth(spike_trains, bin_size=50.0)
     x, y = f_psth.get_plottable_data()
     plt.plot(x, y, '-k', alpha=1.0, label="PSTH")
-    print("Average:", f.avrg())
+
     plt.savefig(str('weight_')+str(k)+'multivariate_PSTH'+'.png');plt.close()
+    plt.xlabel('Time $(ms)$')
+    plt.ylabel('Spikes per bin')
+
     plt.clf()
     plt.figure()
 
@@ -313,6 +351,10 @@ def iter_plot0(md):
     plt.figure()
     isi_distance = spk.isi_distance_matrix(spike_trains)
     plt.imshow(isi_distance, interpolation='none')
+    plt.title('Pairwise ISI distance, T=0-2000')
+    plt.xlabel('post-synaptic neuron number')
+    plt.ylabel('pre-synaptic neuron number')
+
     plt.title("ISI-distance")
     plt.savefig(str('weight_')+str(k)+'ISI_distance'+'.png');plt.close()
 
@@ -338,7 +380,9 @@ def iter_plot0(md):
        pickle.dump(spike_distance,f)
 
     plt.imshow(spike_distance, interpolation='none')
-    plt.title("SPIKE-distance, T=0-2000")
+    plt.title("Pairwise SPIKE-distance, T=0-2000")
+    plt.xlabel('post-synaptic neuron number')
+    plt.ylabel('pre-synaptic neuron number')
 
 
     plt.savefig(str('weight_')+str(k)+'spike_distance_matrix'+'.png');plt.close()
@@ -346,23 +390,24 @@ def iter_plot0(md):
     plt.clf()
     sns.set()
     sns.clustermap(spike_distance);
+
     plt.savefig(str('weight_')+str(k)+'cluster_spike_distance'+'.png');plt.close()
 
 
     plt.figure()
     spike_sync = spk.spike_sync_matrix(spike_trains, interval=(0, float(tstop)))
     plt.imshow(spike_sync, interpolation='none')
+    plt.title('Pairwise Spike Synchony, T=0-2000')
+    plt.xlabel('post-synaptic neuron number')
+    plt.ylabel('pre-synaptic neuron number')
 
     import numpy
     a = numpy.asarray(spike_sync)
     numpy.savetxt("spike_sync_matrix.csv", a, delimiter=",")
 
-
     plt.figure()
     plt.clf()
-
     sns.clustermap(spike_sync);
-
     plt.savefig(str('weight_')+str(k)+'cluster_spike_sync_distance'+'.png');plt.close()
 
 
@@ -448,8 +493,11 @@ def iter_plot1(md):
     coh = None
 
 def te(mdf1):
+    import numpy as np
     from idtxl.multivariate_te import MultivariateTE
     from idtxl.data import Data
+    n_procs = 2
+
     settings = {
         'cmi_estimator': 'JidtKraskovCMI',
         'n_perm_max_stat': 21,
@@ -457,26 +505,49 @@ def te(mdf1):
         'max_lag_sources': 5,
         'min_lag_sources': 4}
     settings['cmi_estimator'] = 'JidtKraskovCMI'
-
-    target = 0
-    dat = Data(normalise=False)
-    n_repl = 10
-    n_procs = 2
-    import numpy as np
-    n_points = n_procs * (settings['max_lag_sources'] + 1) * n_repl
-    dat.set_data(np.arange(n_points).reshape(
-                                        n_procs,
-                                        settings['max_lag_sources'] + 1,
-                                        n_repl), 'psr')
-    print(dat)
-    nw_0 = MultivariateTE()
     yy = []
     for spiketrain in mdf1.spiketrains:
-        y = np.ones_like(spiketrain) * spiketrain.annotations['source_id']
-        yy.append(y)
+        y = np.ones_like(spiketrain)# * spiketrain.annotations['source_id']
+        empty_list = [ i for i in range(0,len(spiketrain.times))]
+        #xx =[ float(x[0]) for x in y ]
+        #print(xx)
+        #yy.append(xx)
+    yy = np.array(yy)
+    #print(yy)
+    target = 0
+    n_procs = 2
+
+    dat = Data(yy,normalise=False)
+    dat.n_procs = n_procs
+
+    help(dat)
+    #import pdb; pdb.set_trace()
+    n_repl = 10
+    #n_points = n_procs * (settings['max_lag_sources'] + 1) * n_repl
+    #dat.set_data(yy.reshape(
+    #                                    n_procs,
+    #                                    settings['max_lag_sources'] + 1,
+    #                                    n_repl), 'psr')
+    #print(dat)
+    nw_0 = MultivariateTE()
+
     import sklearn
     NMF = sklearn.decomposition.NMF(np.array(yy))
     print(NMF)
+
+
+    settings = {'cmi_estimator': 'JidtKraskovCMI',
+            'max_lag_sources': 3,
+            'max_lag_target': 3,
+            'min_lag_sources': 1}
+    mte = MultivariateTE()
+
+    #res_single = mte.analyse_single_target(settings=settings, data=data, target=3)
+    res_full = mte.analyse_network(settings=settings, data=dat)
+
+    # generate graph plots
+    g_single = visualise_graph.plot_selected_vars(res_single, mte)
+    g_full = visualise_graph.plot_network(res_full)
     #nw_0._initialise(settings, np.array(yy), 'all', target)
     #nw.analyse_single_target(settings=settings, data=dat, target=1)
 
@@ -497,7 +568,7 @@ titems = [ (k,mdf1) for k,mdf1 in enumerate(mdfloop.values()) ]
 
 import dask.bag as db
 
-te(list(mdfloop.values())[0])
+#te(list(mdfloop.values())[0])
 grid = db.from_sequence(titems,npartitions = 3)
 _ = list(db.map(iter_plot0,grid).compute());
 
