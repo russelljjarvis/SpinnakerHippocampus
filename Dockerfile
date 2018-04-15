@@ -88,3 +88,5 @@ RUN nrnivmodl
 RUN sudo chown -R jovyan $HOME
 
 RUN R -e 'install.packages(c("rPython","shiny","igraph","visNetwork,"pracma,"stringr","chorddiag"))'
+
+ENTRYPOINT R -e 'runApp()'
