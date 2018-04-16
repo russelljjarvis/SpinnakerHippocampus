@@ -1,7 +1,7 @@
 
 # Reproduction of the group Assignment 494 Data Analysis in Computation Neuroscience
 
-Reproduction Steps:
+## Reproduction Steps:
 
 We created a Dedicated Docker container, that had preinstalled `PyNN`, `NEURON`, `elephant`, `neo` and `R`.
 
