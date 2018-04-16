@@ -3,7 +3,7 @@
 
 ## Reproduction Steps:
 
-Using a dedicated Docker container we used python3 to programmatically downloaded a file `_hybrid_connectivity_matrix_20171103_092033.xlsx`  inside a script `qi_ascoli.py` (the file was named after the two authors, whose publications most informed our work[1][2]).
+Using a dedicated Docker container we used python3 to programmatically download a file _hybrid_connectivity_matrix_20171103_092033.xlsx_ inside a script _qi_ascoli.py_ (the file was named after the two authors, whose publications most informed our work[1][2]).
 
 The code snippet for downloading those files (a snippet from qi_ascoli.py) is pasted below:
 ```
