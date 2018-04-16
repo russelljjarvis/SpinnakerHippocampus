@@ -87,6 +87,9 @@ RUN nrnivmodl
 
 RUN sudo chown -R jovyan $HOME
 
-RUN R -e 'install.packages(c("rPython","shiny","igraph","visNetwork,"pracma,"stringr","chorddiag"))'
 
+RUN R -e 'install.packages(c("rPython","shiny","igraph","visNetwork,"pracma,"stringr","chorddiag"))'
+WORKDIR $HOME/QIASCOLI
+COPY . $HOME/QIASCOLI
+WORKDIR $HOME/QIASCOLI/BackupRfiles
 ENTRYPOINT R -e 'runApp()'
