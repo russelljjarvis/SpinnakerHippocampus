@@ -3,8 +3,7 @@
 
 ## Reproduction Steps:
 
-
-We programmatically downloaded a file `_hybrid_connectivity_matrix_20171103_092033.xlsx` from inside a file called `qi_ascoli.py` (named after the two authors, whose worked most informed our work).
+Using a dedicated Docker container that inherits from jupyter-stacks as it's base we used python3 to programmatically downloaded a file `_hybrid_connectivity_matrix_20171103_092033.xlsx`  in a file called `qi_ascoli.py` (the file was named after the two authors, whose publications most informed our work).
 
 The code for downloading those files (a snippet from qi_ascoli.py) is pasted below:
 ```
@@ -60,9 +59,13 @@ Another file, `forked.py` was used to invoke the python code in `qi_ascoli`, in 
 
 Denise analysed the initial wiring map, in excel format (_hybrid_connectivity_matrix_20171103_092033.xlsx), and used it to extract indegree and outdegree distributions, for each cell in the network. Denise used excel to create vectors which describe indegree and outdegree of each neuron, as related to different anatomical regions in the hippocampus: 'DG', 'EC', 'CA1', 'CA2', and 'CA3'. She then used python to plot these region specific indegree and outdegree distributions per hippocampus sub-region. More information on Denises's workflow can be found in here jupyter notebook found at: https://github.com/russelljjarvis/DAnalysisCNeuro/blob/master/RichClub1-2.ipynb
 
-Subsequently Daniel Petty's code for interactive network visualization using Shiny a module in R is launched. It acts on csv files defined in qi_ascoli. The initial wiring rules defined in `_hybrid_connectivity_matrix_20171103_092033.xlsx` used negative integers '-1', and '-2' to denote the presence of inhibitory synaptic connections, and '1' and '2' denoted excitatory connections.
+Subsequently Daniel Petty's code for interactive network visualization using Shiny a module in R is launched. Daniel's R code acted on csv files defined in qi_ascoli. The initial wiring rules defined in `_hybrid_connectivity_matrix_20171103_092033.xlsx` used negative integers '-1', and '-2' to denote the presence of inhibitory synaptic connections, and '1' and '2' denoted excitatory connections.
 
-We decomposed this connection matrix into 4 sub connection matrices that dealt with specific projections between the two populations, conventionally denoted by: 'EE', 'EI', 'II' and 'IE'. Such that '1' entry in the matrix denoted the presence of connection, and '0' denoted the absence of a connection. Values of '2', and '-2' in Ascoli's initial wiring map where used to represent putative connections, hypothesised connections, that have not been falsified yet. We upgraded putative connections to the status of confirmed connections, for the purposes of adding synaptic drive to neurons, that may otherwise suffer from sparse connectivity, making it easier to tip the neurons into a more realistic high conductance state.
+We decomposed this connection matrix into fourt sub connection matrices that dealt with specific projections between the two populations, conventionally denoted by: 'EE', 'EI', 'II' and 'IE'. Such that '1' entry in the matrix denoted the presence of connection, and '0' denoted the absence of a connection. Values of '2', and '-2' in Ascoli's initial wiring map where used to represent putative connections, hypothesised connections, that have not been falsified yet. We upgraded putative connections to the status of confirmed connections, for the purposes of adding synaptic drive to neurons, that may otherwise suffer from sparse connectivity, making it easier to tip the neurons into a more realistic high conductance state.
+
+The R package chorddiag was able to take those matrices and create chord diagrams. Getting the chord diagrams into a form we could repeatedly use independent of R necessitated the R package shiny.
+
+The network visualization requires taking the excitatory to excitatory, excitatory to inhibitory, inhibitory to inhibitory, and inhibitory to excitatory connection matrices and turning them into graphs via the igraph package. The visNetwork package is interactive and much more versatile for visualization, but lacks the ability to directly translate the adjacency matrices. After converting the igraph graph into the visNetwork format, attributes are assigned to each node in the network: betweenness, group, location, and firing rate. Then the visNetwork plot is called in a shiny app, giving the visualization to be run independent of R.
 
 We have tested the Dockerfile up to line 90, and we where able to confirm that this build is sufficient for launching both R, and python3 with PyNN, elephant and other dependencies, however we are unsure if running lines 91, and 92. Will flawlesly run the network visualization software. We are confident, that conceptually this approach to running all the software is correct.
 https://github.com/russelljjarvis/DAnalysisCNeuro/blob/master/Dockerfile#L90-#L92
