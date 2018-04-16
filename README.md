@@ -1,65 +1,92 @@
-# DataAnalysisComputationNeuroscience
 
-Analysis and Visualization of spike time variance in a basic neuromorphic simulation of hippocampus cells.
+# Reproduction of the group Assignment MAT/BIO 494 Data Analysis in Neuroscience
 
-Introduction: As a contribution to my ongoing research objectives, I want to be able to create parts of an analysis and visualization pipeline that will allow me to difference model predictions (characterizing population wide, and individual neuron simulated spike times), with some experimentally derived observations of spike time variation and spike time synchrony in the rodent hippocampus.  This might sound difficult, however there are already many off the shelf algorithms for computing spike time variation and spike train synchrony:
-http://elephant.readthedocs.io/en/latest/reference/statistics.html
-https://github.com/mariomulansky/PySpike/tree/master/pyspike.git
+## Reproduction Steps:
 
-Much of this work may involve good visualize of multivariate spike train distance, and within neuron coefficient of variation of Inter Spike Intervals. I am also open to considering different and less elaborate spike time based statistics and visualizations that I can use to meaningfully compare simulated model predictions to experimental observations.
+Using a dedicated Docker container we used python3 to programmatically downloaded a file `_hybrid_connectivity_matrix_20171103_092033.xlsx`  inside a script `qi_ascoli.py` (the file was named after the two authors, whose publications most informed our work[1][2]).
 
-For this project I have created a dedicated github repository: https://github.com/russelljjarvis/DanalysisCNeuro.git
+The code snippet for downloading those files (a snippet from qi_ascoli.py) is pasted below:
+```
+# Get some hippocampus connectivity data, based on a conversation with
+# academic researchers on GH:
+# https://github.com/Hippocampome-Org/GraphTheory/issues?q=is%3Aissue+is%3Aclosed
+# scrape hippocamome connectivity data, that I intend to use to program neuromorphic hardware.
+# conditionally get files if they don't exist.
+path_xl = '_hybrid_connectivity_matrix_20171103_092033.xlsx'
+if not os.path.exists(path_xl):
+    os.system('wget https://github.com/Hippocampome-Org/GraphTheory/files/1657258/_hybrid_connectivity_matrix_20171103_092033.xlsx')
+```
 
-The idea is to run and record from neuronal network simulations run on a neuromorphic hardware substrate which I access via: 
-https://collab.humanbrainproject.eu/
-Note also, if you decided to join this group project and you were interested in the coding the model, I can provide instructions for requesting access, or I could run your code via my collaboration portal.
+We estimated the rheobase current injection for the excitatory and inhibitory classes of cells using code from the _neuronunit_ model testing library which contains convience methods, which encapsulate a complex implementation of the rheobase search algorithm. _Neuronunits's_ rheobase search accesses _NEURON_ solvers, in a parallel manner. Parallel NEURON simulations are used to extract rheobase current injection values implied by a set of Izhikevich equations, by iteratively running an appropriate set of differential equations, that exhaustively search an appropriate range of current injection values.
 
-The simulation mentioned herein is a reduced (reduced in degree of cell numbers and electro-dynamic properties) hippocampus neuronal network model that is currently in development, however preliminary outputs should be ready before the project work starts in earnest (next week).
+This code was subequently commented out, but it persists in that form at the top of `qi_ascoli.py`. A snippet is below:
+```
+from neuronunit.models.reduced import ReducedModel
+from neuronunit.optimization import get_neab
+model = ReducedModel(get_neab.LEMS_MODEL_PATH,name=str('vanilla'),backend=('NEURON'))
+attrs = {'a':0.02, 'b':0.2, 'c':-65+15*0.5, 'd':8-0.5**2 }
 
-I have already talked to several people in class about collaborating in a final project, if you are one of these people please feel free to discuss either committing to this proposal, rejecting it and working with other people, or to suggesting changes and improvements.
+from neuronunit.tests import fi
+model.set_attrs(attrs)
+from neuronunit.optimization import get_neab
+rtp = get_neab.tests[0]
+rheobase0 = rtp.generate_prediction(model)
+model = None
 
-The goal is to test if connectivity information combined with simple cell dynamic models can set up a situation where a
-teaching relationship can be measured in the dynamic activity between grid (teacher) and place (student) populations.
+attrs2 = {'a':0.02+0.08*0.5, 'b':0.2-0.05*0.5, 'c':-65, 'd':2 }
 
-## Goals 
-## 1 
-Get an experimentally informed connection matrix from from http://hippocampome.org/netlist
-Or an excell spreadsheet of similar origin.
-## 2 
-Mutate the excell document into a adjacency matrix to pandas df
-## 3 
-Search inside the data frame, create a filtered df/matrix using only entities from the Medial Entorhinal Cortex (MEC)rt
-Done
+model.set_attrs(attrs2)
+from neuronunit.optimization import get_neab
+rtp = get_neab.tests[0]
+rheobase1 = rtp.generate_prediction(model)
+print(rheobase0['value'],rheobase1['value'])
+assert rheobase0['value'] != rheobase1['value']
+```
 
-## 3.75 
-Create histograms that summarize the target cells.
-# 
-Ascertain whether an entity is exhitatory or inhibitory and apropriately substitute in simplified versions of Fast Inhibitory, or Izhiketich excitatory.
+Once rheobase current injections for the excitatory and inhibitory populations of cells where found, we wired togethor the cell synapses. To do so we implemented wiring rules that handled four specific of sub-networks, between the two main classes of cells: Excitatory to Excitatory projections, Inhibitory to Excitatory, Excitatory to Inhibitory, and Inhibitory to Inhibitory, using the experimentally derived wiring rules implied by the spreadsheet: `_hybrid_connectivity_matrix_20171103_092033.xlsx`
 
-Use PyNN instead of Neuromorphic hardware, as anything developed in PyNN can be run here.
+PyNN code, for wiring the network, and recording the membrane potential was subsequently executed, inside the scope of a main method in qi_ascoli `sim_runner(wgf)`. Sim_runner takes a weight value as an argument, and it uniformly assigns this value to all synaptic weights in the simulated network model.
 
-## 4 
-Use a transfer entropy toolbox to find out if grid cell behavior predicts place cell behavior, merely due to effective connectivity.
+Another file, `forked.py` was used to invoke the python code in `qi_ascoli`, in an embarrassingly parallel manner, by using operating system level calls to the BASH command fork, making it possible to simulate very many networks of different weight values in a short amount of time.
 
-## 5
-If grid cell's train place cells there should be higher directed mutual information from Grid -> Place. 
+Denise analysed the initial wiring map, in excel format (_hybrid_connectivity_matrix_20171103_092033.xlsx), and used it to extract indegree and outdegree distributions, for each cell in the network. Denise used excel to create vectors which describe indegree and outdegree of each neuron, as related to different anatomical regions in the hippocampus: 'DG', 'EC', 'CA1', 'CA2', and 'CA3'. She then used python to plot these region specific indegree and outdegree distributions per hippocampus sub-region. More information on Denises's workflow can be found in here jupyter notebook found at: https://github.com/russelljjarvis/DAnalysisCNeuro/blob/master/RichClub1-2.ipynb
 
-There should be lower directed mutual information from Place -> Grid.
+Subsequently Daniel Petty's code for interactive network visualization using Shiny a module in R is launched. Daniel's R code acted on csv files defined in qi_ascoli. The initial wiring rules defined in `_hybrid_connectivity_matrix_20171103_092033.xlsx` used negative integers '-1', and '-2' to denote the presence of inhibitory synaptic connections, and '1' and '2' denoted excitatory connections.
 
-# Don't Do:
+We decomposed this connection matrix into four sub-connection matrices that dealt with specific projections between the two populations of cells. These projections are conventionally denoted: 'EE', 'EI', 'II' and 'IE'. Such that '1' entry in the matrix denoted the presence of connection, and '0' denoted the absence of a connection. Values of '2', and '-2' in Ascoli's initial wiring map where used to represent putative connections, hypothesised connections, that have not been falsified yet. We upgraded putative connections to the status of confirmed connections, for the purposes of adding synaptic drive to neurons, that may otherwise suffer from sparse connectivity, making it easier to tip the neurons into a more realistic high conductance state.
 
-## 4 
-Search Allen Brain and NeuroElectro for physiological properties that can be modelled using the smaller list of cell type entities limited to the MEC. 
-Only interested in models that can be implemented in PyNN, on SpiNNaker
-## 5 
-Programatically push a job to the Human Brain Collaboration Portal using:
-## 6
-Authenticate on the BBP using:
-from bbp_client.oidc.client import BBPOIDCClient
-client = BBPOIDCClient.file_auth('path_to_yaml')
+The R package chorddiag was able to take those matrices and create chord diagrams. Getting the chord diagrams into a form we could repeatedly use independent of R necessitated the R package shiny.
 
-## 6
-https://developer.humanbrainproject.eu/docs/projects/bbp-client/0.4.4/task_service.html
+The network visualization requires taking the excitatory to excitatory, excitatory to inhibitory, inhibitory to inhibitory, and inhibitory to excitatory connection matrices and turning them into graphs via the igraph package. The visNetwork package is interactive and much more versatile for visualization, but lacks the ability to directly translate the adjacency matrices. After converting the igraph graph into the visNetwork format, attributes are assigned to each node in the network: betweenness, group, location, and firing rate. Then the visNetwork plot is called in a shiny app, giving the visualization to be run independent of R.
 
-## 7
-https://collab.humanbrainproject.eu/#/collab/5458/nav/42545
+We have tested the Dockerfile up to line 90, and we where able to confirm that this build is sufficient for launching both R, and python3 with PyNN, elephant and other dependencies, however we are unsure if running lines 91, and 92. Will flawlesly run the network visualization software. We are confident, that conceptually this approach to running all the software is correct.
+https://github.com/russelljjarvis/DAnalysisCNeuro/blob/master/Dockerfile#L90-#L92
+```
+RUN R -e 'install.packages(c("rPython","shiny","igraph","visNetwork,"pracma,"stringr","chorddiag"))'
+ENTRYPOINT R -e 'runApp()'
+```
+After `forked.py` runs parallel simulations that explore different synaptic weight values, the file `sa.py` (spike analysis) is called. `sa.py` is and analysis program which finds firing rates of cells, ISIs, Coefficients of Variation, Spike Distance Matrices, and many other network level feature analysis.
+
+Spike analysis is called using `dask distributed's` parallel map function, to do a parallel analysis that acts membrane and spike time recordings generated by the previously described simulations launched by `forked.py`.
+
+The graphs generated by `sa.py` (spike analysis) file where then loaded into a dedicated notebook `RichClubPresentation.ipynb` with code for interactively stepping through different values of synaptic weight, in a way that enabled us to interrogate the contribution of synaptic weight values on network dynamics.  
+
+To outline the entire workflow: We created a Dedicated Docker container, that had preinstalled `PyNN`, `NEURON`, `elephant`, `neo` and `R`. Inside docker container we ran the files: 'forked.py', 'sa.py'. We also anticipate the near future possibility of running: ```RUN R -e 'install.packages(c("rPython","shiny","igraph","visNetwork,"pracma,"stringr","chorddiag"))'
+ENTRYPOINT R -e 'runApp()```
+
+Daniel Petty's final network graph presents structure and function relationships in a manner that is readily digested by the human visual system. Firing rate, neuron centrality, projection partners and neuron type are all present on the same graph.
+3D geometry of the neuronal network and exact spike timing data, have been thrown away in favor of these more abstract and predictive relationships. Daniel's code exposes structure function relationships which would otherwise be buried in matricies, making them much more accessible to the human network modeller.
+
+
+_[1]    C. L. Rees, D. W. Wheeler, D. J. Hamilton, C. M. White, A. O. Komendantov, and G. A. Ascoli, “Graph theoretic and motif analyses of the hippocampal neuron type potential connectome,” Eneuro, vol. 3, no. 6, p. ENEURO–0205, 2016._
+
+
+_[2]    D. Qi and Z. Xiao, “Spike trains synchrony with different coupling strengths in a hippocampus CA3 small-world network model,” in Biomedical Engineering and Informatics (BMEI), 2013 6th International Conference on, 2013, pp. 270–275."_
+
+
+
+
+
+
+
+
