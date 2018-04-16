@@ -1,5 +1,5 @@
 
-# Reproduction of the group Assignment 494 Data Analysis in Computation Neuroscience
+# Reproduction of the group Assignment 494 Data Analysis in Neuroscience
 
 ## Reproduction Steps:
 
