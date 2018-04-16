@@ -3,17 +3,15 @@
 
 ## Reproduction Steps:
 
-Using a dedicated Docker container that inherits from jupyter-stacks as it's base we used python3 to programmatically downloaded a file `_hybrid_connectivity_matrix_20171103_092033.xlsx`  in a file called `qi_ascoli.py` (the file was named after the two authors, whose publications most informed our work[1][2]).
+Using a dedicated Docker container we used python3 to programmatically downloaded a file `_hybrid_connectivity_matrix_20171103_092033.xlsx`  inside a script `qi_ascoli.py` (the file was named after the two authors, whose publications most informed our work[1][2]).
 
-The code for downloading those files (a snippet from qi_ascoli.py) is pasted below:
+The code snippet for downloading those files (a snippet from qi_ascoli.py) is pasted below:
 ```
 # Get some hippocampus connectivity data, based on a conversation with
 # academic researchers on GH:
 # https://github.com/Hippocampome-Org/GraphTheory/issues?q=is%3Aissue+is%3Aclosed
 # scrape hippocamome connectivity data, that I intend to use to program neuromorphic hardware.
 # conditionally get files if they don't exist.
-
-
 path_xl = '_hybrid_connectivity_matrix_20171103_092033.xlsx'
 if not os.path.exists(path_xl):
     os.system('wget https://github.com/Hippocampome-Org/GraphTheory/files/1657258/_hybrid_connectivity_matrix_20171103_092033.xlsx')
