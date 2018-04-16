@@ -17,7 +17,7 @@ if not os.path.exists(path_xl):
     os.system('wget https://github.com/Hippocampome-Org/GraphTheory/files/1657258/_hybrid_connectivity_matrix_20171103_092033.xlsx')
 ```
 
-We estimated the rheobase current injection for the excitatory and inhibitory classes of cells using code from the _neuronunit_ model testing library which contains convience methods, which encapsulate a complex implementation of the rheobase search algorithm. _Neuronunits's_ rheobase search accesses _NEURON_ solvers, in a parallel manner. Parallel NEURON simulations are used to extract rheobase current injection values implied by a set of Izhikevich, by iteratively running an appropriate set of differential equations, that exhaustively search an appropriate range of current injection values.
+We estimated the rheobase current injection for the excitatory and inhibitory classes of cells using code from the _neuronunit_ model testing library which contains convience methods, which encapsulate a complex implementation of the rheobase search algorithm. _Neuronunits's_ rheobase search accesses _NEURON_ solvers, in a parallel manner. Parallel NEURON simulations are used to extract rheobase current injection values implied by a set of Izhikevich equations, by iteratively running an appropriate set of differential equations, that exhaustively search an appropriate range of current injection values.
 
 This code was subequently commented out, but it persists in that form at the top of `qi_ascoli.py`. A snippet is below:
 ```
