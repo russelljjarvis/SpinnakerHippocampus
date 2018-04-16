@@ -56,7 +56,7 @@ We wired the cells, and constituent classes of sub-networks: Excitatory to Excit
 
 PyNN code, for wiring the network, and recording the membrane potential was subsequently executed, inside the scope of a main method in qi_ascoli `sim_runner(wgf)`. Sim_runner takes a weight value as an argument, and it uniformly assigns this value to all synaptic weights in the simulated network model.
 
-Another file, `forked.py` was used to invoke the python code in `qi_ascoli`, in an embarrassingly parallel manner (by using operating system level calls to the BASH command fork, making it possible to simulate very many networks of different weight values in a short amount of time.
+Another file, `forked.py` was used to invoke the python code in `qi_ascoli`, in an embarrassingly parallel manner, by using operating system level calls to the BASH command fork, making it possible to simulate very many networks of different weight values in a short amount of time.
 
 Denise analysed the initial wiring map, in excel format (_hybrid_connectivity_matrix_20171103_092033.xlsx), and used it to extract indegree and outdegree distributions, for each cell in the network. Denise used excel to create vectors which describe indegree and outdegree of each neuron, as related to different anatomical regions in the hippocampus: 'DG', 'EC', 'CA1', 'CA2', and 'CA3'. She then used python to plot these region specific indegree and outdegree distributions per hippocampus sub-region. More information on Denises's workflow can be found in here jupyter notebook found at: https://github.com/russelljjarvis/DAnalysisCNeuro/blob/master/RichClub1-2.ipynb
 
