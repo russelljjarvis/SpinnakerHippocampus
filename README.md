@@ -25,20 +25,16 @@ from neuronunit.models.reduced import ReducedModel
 from neuronunit.optimization import get_neab
 model = ReducedModel(get_neab.LEMS_MODEL_PATH,name=str('vanilla'),backend=('NEURON'))
 attrs = {'a':0.02, 'b':0.2, 'c':-65+15*0.5, 'd':8-0.5**2 }
-#from neuronunit.optimization.data_transport_container import DataTC
-#dtc = DataTC()
+
 from neuronunit.tests import fi
 model.set_attrs(attrs)
 from neuronunit.optimization import get_neab
 rtp = get_neab.tests[0]
 rheobase0 = rtp.generate_prediction(model)
-rheobase = rheobase0
+model = None
+
 attrs2 = {'a':0.02+0.08*0.5, 'b':0.2-0.05*0.5, 'c':-65, 'd':2 }
-#, i_offset=0)
-#attrs = {'a':0.02, 'b':0.2, 'c':-65+15*0.5, 'd':8-0.5**2 }
-#from neuronunit.optimization.data_transport_container import DataTC
-#dtc = DataTC()
-from neuronunit.tests import fi
+
 model.set_attrs(attrs2)
 from neuronunit.optimization import get_neab
 rtp = get_neab.tests[0]
