@@ -16,6 +16,7 @@ path_xl = '_hybrid_connectivity_matrix_20171103_092033.xlsx'
 if not os.path.exists(path_xl):
     os.system('wget https://github.com/Hippocampome-Org/GraphTheory/files/1657258/_hybrid_connectivity_matrix_20171103_092033.xlsx')
 ```
+The connection map contained ontologies pertaining to both excitatory and inhibitory classes of neurons, as well as their pattern of connectivity in the network. Excitatory and Inhibitory neurons are known to have have different electrophysiological properties, and firing dynamics, Inhibitory cell dynamics have been broadly charectized as fast spiking (inhibitory) dynamics for the cells with cholinergic projecting cells. The excitatory neurons have a broader spike width and slower membrane time constants. These different membrane dynamic properties can be recreated by using the correct parameters into Izhikevich equations. This step was implemented in PyNN in the file `qi_ascoli.py`.
 
 We estimated the rheobase current injection for the excitatory and inhibitory classes of cells using code from the _neuronunit_ model testing library which contains convience methods, which encapsulate a complex implementation of the rheobase search algorithm. _Neuronunits's_ rheobase search accesses _NEURON_ solvers, in a parallel manner. Parallel NEURON simulations are used to extract rheobase current injection values implied by a set of Izhikevich equations, by iteratively running an appropriate set of differential equations, that exhaustively search an appropriate range of current injection values.
 
