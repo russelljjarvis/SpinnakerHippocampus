@@ -17,7 +17,7 @@ RUN nrnivmodl
 #RUN sudo apt-get install python-devel libxslt-devel libffi-devel openssl-devel
 
 RUN sudo apt-get install -y g++ python3-dev python3-numpy python3-scipy python3-cffi python3-h5py python3-networkx python3-pyopencl aptitude
-RUN aptitude install -y python3-pyopencl pyopencl
+RUN sudo aptitude install -y python3-pyopencl pyopencl
 RUN sudo /opt/conda/bin/pip3 install git+https://github.com/inducer/pyopencl.git
 RUN /opt/conda/bin/pip3 install --upgrade pip
 RUN python3 -c "import pyopencl as cl"
