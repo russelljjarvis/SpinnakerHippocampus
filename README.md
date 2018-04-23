@@ -6,7 +6,7 @@
 Using a dedicated Docker container we used python3 to programmatically download a file _hybrid_connectivity_matrix_20171103_092033.xlsx_ inside a script _qi_ascoli.py_ (the file was named after the two authors, whose publications most informed our work[1][2]).
 
 The code snippet for downloading those files (a snippet from qi_ascoli.py) is pasted below:
-```
+``` python
 # Get some hippocampus connectivity data, based on a conversation with
 # academic researchers on GH:
 # https://github.com/Hippocampome-Org/GraphTheory/issues?q=is%3Aissue+is%3Aclosed
@@ -21,7 +21,7 @@ The connection map contained ontologies pertaining to both excitatory and inhibi
 We estimated the rheobase current injection for the excitatory and inhibitory classes of cells using code from the _neuronunit_ model testing library which contains convience methods, which encapsulate a complex implementation of the rheobase search algorithm. _Neuronunits's_ rheobase search accesses _NEURON_ solvers, in a parallel manner. Parallel NEURON simulations are used to extract rheobase current injection values implied by a set of Izhikevich equations.
 
 The code for performing rheobase current search is currently commented in the code, but it persists in a commented form at the top of `qi_ascoli.py`. A snippet is below:
-```
+``` python
 from neuronunit.models.reduced import ReducedModel
 from neuronunit.optimization import get_neab
 model = ReducedModel(get_neab.LEMS_MODEL_PATH,name=str('vanilla'),backend=('NEURON'))
@@ -60,7 +60,7 @@ The network visualization requires taking the excitatory to excitatory, excitato
 
 We have tested the Dockerfile up to line 90, and we where able to confirm that this build is sufficient for launching both R, and python3 with PyNN, elephant and other dependencies, however we are unsure if running lines 91, and 92. Will flawlesly run the network visualization software. We are confident, that conceptually this approach to running all the software is correct.
 https://github.com/russelljjarvis/DAnalysisCNeuro/blob/master/Dockerfile#L90-#L92
-```
+``` BASH
 RUN R -e 'install.packages(c("rPython","shiny","igraph","visNetwork,"pracma,"stringr","chorddiag"))'
 ENTRYPOINT R -e 'runApp()'
 ```
