@@ -1,12 +1,8 @@
 FROM jupyter/base-notebook
+ENV QT_QPA_PLATFORM offscreen
 #FROM russelljarvis/neuronunit
 USER jovyan
-RUN sudo apt-get install --fix-missing && sudo apt-get install -f && sudo apt-get autoremove -y
-
-RUN sudo apt update -y
-RUN sudo apt upgrade -y
-
-ENV QT_QPA_PLATFORM offscreen
+RUN sudo apt-get install --fix-missing && sudo apt-get install -f && sudo apt-get autoremove -y && sudo apt update -y &&sudo apt upgrade -y
 RUN pip uninstall -y neo
 RUN /opt/conda/bin/pip3 install dask psutil natsort pyspike pyNN lazyarray neo matplotlib tensorflow pyopencl
 
