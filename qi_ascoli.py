@@ -1,37 +1,18 @@
 
 # Code for finding the the rheobase current injection values of excitatory and inhibitory neurons.
+import pyNN.spiNNaker as sim
 
-'''
-
-from neuronunit.models.reduced import ReducedModel
-from neuronunit.optimization import get_neab
-model = ReducedModel(get_neab.LEMS_MODEL_PATH,name=str('vanilla'),backend=('NEURON'))
-attrs = {'a':0.02, 'b':0.2, 'c':-65+15*0.5, 'd':8-0.5**2 }
-#from neuronunit.optimization.data_transport_container import DataTC
-#dtc = DataTC()
-from neuronunit.tests import fi
-model.set_attrs(attrs)
-from neuronunit.optimization import get_neab
-rtp = get_neab.tests[0]
-rheobase0 = rtp.generate_prediction(model)
-rheobase = rheobase0
-attrs2 = {'a':0.02+0.08*0.5, 'b':0.2-0.05*0.5, 'c':-65, 'd':2 }
-#, i_offset=0)
-#attrs = {'a':0.02, 'b':0.2, 'c':-65+15*0.5, 'd':8-0.5**2 }
-#from neuronunit.optimization.data_transport_container import DataTC
-#dtc = DataTC()
-from neuronunit.tests import fi
-model.set_attrs(attrs2)
-from neuronunit.optimization import get_neab
-rtp = get_neab.tests[0]
-rheobase1 = rtp.generate_prediction(model)
-print(rheobase0['value'],rheobase1['value'])
-assert rheobase0['value'] != rheobase1['value']
-'''
-
+# prepare simulation
+if simulator == "pynn_spinnaker":
+	import pynn_spinnaker as sim
+	logger = logging.getLogger("pynn_spinnaker")
+	logger.setLevel(logging.INFO)
+	logger.addHandler(logging.StreamHandler())
+else:
+	exec('import pyNN.%s as sim' % simulator)
+	sim.setup(**simulator_params[simulator])
 def sim_runner(wgf):
     wg = wgf
-
     import pyNN.neuron as sim
     nproc = sim.num_processes()
     node = sim.rank()
