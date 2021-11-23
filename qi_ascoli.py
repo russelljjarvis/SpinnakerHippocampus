@@ -4,13 +4,13 @@ import pyNN.spiNNaker as sim
 
 # prepare simulation
 if simulator == "pynn_spinnaker":
-	import pynn_spinnaker as sim
-	logger = logging.getLogger("pynn_spinnaker")
-	logger.setLevel(logging.INFO)
-	logger.addHandler(logging.StreamHandler())
+    import pynn_spinnaker as sim
+    logger = logging.getLogger("pynn_spinnaker")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(logging.StreamHandler())
 else:
-	exec('import pyNN.%s as sim' % simulator)
-	sim.setup(**simulator_params[simulator])
+    exec('import pyNN.%s as sim' % simulator)
+    sim.setup(**simulator_params[simulator])
 def sim_runner(wgf):
     wg = wgf
     import pyNN.neuron as sim
